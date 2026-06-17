@@ -391,11 +391,11 @@
     function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
     document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
-    // Biological Day Logic: Offset by 4 hours (4:00 AM Cutoff)
+    // Biological Day Logic: Offset mathematically by exactly 4 hours (14,400,000 ms)
+    // Bypasses browser-specific d.setHours() quirks
     const getBioDate = (dateVal) => {
       const d = dateVal ? new Date(dateVal) : new Date();
-      d.setHours(d.getHours() - 4);
-      return d;
+      return new Date(d.getTime() - 14400000);
     };
 
     const ALTERNATIVES = {
@@ -416,22 +416,6 @@
       fri: { label: 'Push', color: '#ff9f1c', exercises: [ { name: 'Machine Shoulder Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Smith / DB Incline Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Pec Deck', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Overhead Tricep Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
       sun: { label: 'Lower – Posterior', color: '#a29bfe', exercises: [ { name: 'Romanian Deadlift', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Walking Lunges', targetSets: 3, targetReps: '12 each', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Good Mornings', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Seated Calf Raise', targetSets: 3, targetReps: '15–20', isCore: false } ] }
     };
-
-    const DEFAULT_SUPPS = [
-      { id: 's1', time: 'morning', name: 'Kirkland Daily Multi', note: '2 tablets with breakfast' },
-      { id: 's2', time: 'morning', name: 'Vital Choice D3 + K2 MK-7', note: 'Take with fat-containing meal' },
-      { id: 's3', time: 'morning', name: 'Sports Research Omega-3', note: '1-2 softgels with fat-containing meal' },
-      { id: 's4', time: 'morning', name: 'Zinc Picolinate 15-25mg', note: 'With full meal — not fasted' },
-      { id: 's5', time: 'morning', name: 'Jarrow Methyl B12', note: 'Sublingual — methylcobalamin' },
-      { id: 's6', time: 'morning', name: 'Lion\'s Mane + Alpha-GPC', note: 'Cognitive Primer stack' },
-      { id: 's7', time: 'morning', name: 'L-Theanine 200mg', note: 'With morning coffee' },
-      { id: 's8', time: 'morning', name: 'Bacopa Monnieri 300mg', note: 'With food' },
-      { id: 's9', time: 'other', name: 'Creatine Monohydrate 5g', note: 'Morning or post-workout' },
-      { id: 's10', time: 'other', name: 'Transparent Labs BULK', note: '1 scoop 20-30 min pre-workout' },
-      { id: 's11', time: 'evening', name: 'Magnesium Glycinate 240mg', note: '2 capsules ONLY (avoid upper limit)' },
-      { id: 's12', time: 'evening', name: 'Jarrow KSM-66 Ashwagandha', note: '600mg for cortisol/sleep support' },
-      { id: 's13', time: 'evening', name: 'CJC-1295 + Ipamorelin', note: '10:30 PM (Requires 2-hour fast prior)' }
-    ];
 
     const DAY_MAP = ['sun','mon','tue','wed','thu','fri','sat'];
     const DAY_LABELS = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
@@ -1012,7 +996,7 @@
       const last8 = sessions.slice(-8); let bestWeight = 0, bestVolSet = { w: 0, r: 0, vol: 0 };
       sessions.forEach(s => s.sets.forEach(st => { if (st.weight > bestWeight) bestWeight = st.weight; const v = (st.weight||0) * (st.reps||0); if (v > bestVolSet.vol) bestVolSet = { w: st.weight, r: st.reps, vol: v }; }));
       const topWeights = last8.map(s => Math.max(...s.sets.map(st => st.weight||0), 0)); const maxW = Math.max(...topWeights, 1);
-      container.innerHTML = `<div class="card mb-4"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Top Set Weight</h3><div class="chart-bar-container">${last8.map((s, i) => `<div class="flex flex-col items-center flex-1"><div class="chart-bar w-full" style="height:${Math.max((topWeights[i] / maxW) * 140, 8)}px;background:linear-gradient(180deg,var(--purple),rgba(108,99,255,0.4));"><span class="chart-bar-label text-white">${topWeights[i]}</span></div><div class="chart-bar-date">${new Date(s.date).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})}</div></div>`).join('')}</div></div><div class="card"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Personal Records</h3><div class="space-y-3"><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">🏆</span><div><p class="text-xs text-[#6b6b80]">Best Weight</p><p class="text-lg font-black">${bestWeight} lbs</p></div></div><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">💪</span><div><p class="text-xs text-[#6b6b80]">Best Volume Set</p><p class="text-lg font-black">${bestVolSet.w} × ${bestVolSet.r}</p></div></div></div></div>`;
+      container.innerHTML = `<div class="card mb-4"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Top Set Weight</h3><div class="chart-bar-container">${last8.map((s, i) => `<div class="flex flex-col items-center flex-1"><div class="chart-bar w-full" style="height:${Math.max((topWeights[i] / maxW) * 140, 8)}px;background:linear-gradient(180deg,var(--purple),rgba(108,99,255,0.4));"><span class="chart-bar-label text-white">${topWeights[i]}</span></div><div class="chart-bar-date">${getBioDate(s.date).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})}</div></div>`).join('')}</div></div><div class="card"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Personal Records</h3><div class="space-y-3"><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">🏆</span><div><p class="text-xs text-[#6b6b80]">Best Weight</p><p class="text-lg font-black">${bestWeight} lbs</p></div></div><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">💪</span><div><p class="text-xs text-[#6b6b80]">Best Volume Set</p><p class="text-lg font-black">${bestVolSet.w} × ${bestVolSet.r}</p></div></div></div></div>`;
     });
 
     // ===========================
