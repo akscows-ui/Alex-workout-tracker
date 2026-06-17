@@ -142,6 +142,7 @@
 </head>
 <body>
 
+  <!-- ==================== HOME VIEW ==================== -->
   <div id="view-home" class="view active px-5 pt-6 pb-4">
     <header class="mb-6">
       <h1 class="text-2xl font-black gradient-text tracking-tight">ALEX TRACKER</h1>
@@ -170,6 +171,7 @@
     <section id="last-session-i9j0" class="card mb-4" style="display:none;"></section>
   </div>
 
+  <!-- ==================== LOG VIEW ==================== -->
   <div id="view-log" class="view px-5 pt-4 pb-4">
     <div id="log-sticky-k1l2" class="sticky top-0 z-50 pb-3 pt-2 transition-colors duration-300" style="background:var(--bg);">
       <div class="flex items-center justify-between mb-2">
@@ -190,6 +192,7 @@
     </div>
   </div>
 
+  <!-- ==================== DIET VIEW ==================== -->
   <div id="view-diet" class="view px-5 pt-6 pb-4">
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-2xl font-black gradient-text">Nutrition</h1>
@@ -217,6 +220,7 @@
       </div>
     </div>
 
+    <!-- Supplement Tracker -->
     <div class="flex items-center justify-between mb-3 mt-8">
       <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest">Daily Supplements</h2>
       <button id="supp-edit-btn" class="text-[10px] font-bold text-[#6b6b80] underline">Edit Stack</button>
@@ -252,6 +256,7 @@
     <button id="diet-export-btn" class="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Diet Data (CSV)</button>
   </div>
 
+  <!-- ==================== HISTORY VIEW ==================== -->
   <div id="view-history" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">History</h1>
     <div id="history-list-a1b1" class="space-y-3 mb-8"></div>
@@ -267,12 +272,14 @@
     </div>
   </div>
 
+  <!-- ==================== PROGRESS VIEW ==================== -->
   <div id="view-progress" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">Progress</h1>
     <div class="mb-4"><select id="progress-select-c2d2"></select></div>
     <div id="progress-content-e3f3"><p class="text-sm text-[#6b6b80]">Select an exercise to view progress</p></div>
   </div>
 
+  <!-- ==================== MODALS & OVERLAYS ==================== -->
   <div id="rest-overlay-g4h4" class="rest-overlay" style="display:none;">
     <div class="rest-sheet">
       <p class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Rest Timer</p>
@@ -385,7 +392,6 @@
     document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
     // Biological Day Logic: Offset mathematically by exactly 4 hours (14,400,000 ms)
-    // Bypasses browser-specific d.setHours() quirks
     const getBioDate = (dateVal) => {
       const d = dateVal ? new Date(dateVal) : new Date();
       return new Date(d.getTime() - 14400000);
@@ -399,12 +405,13 @@
       'Hack Squat': ['Barbell Squat', 'Goblet Squat', 'Leg Press'],
       'Romanian Deadlift': ['Stiff-Leg Deadlift', 'Lying Leg Curl', 'Good Mornings'],
       'Weighted Pull-ups': ['Lat Pulldown', 'Assisted Pull-ups'],
-      'Machine Shoulder Press': ['DB Shoulder Press', 'Barbell OHP']
+      'Machine Shoulder Press': ['DB Shoulder Press', 'Barbell OHP'],
+      'Facepulls': ['Rear Delt Fly', 'Band Pull-Aparts']
     };
 
     const PROGRAM = {
       mon: { label: 'Upper', color: '#6c63ff', exercises: [ { name: 'Pec Deck', targetSets: 4, targetReps: '10–12', isCore: false }, { name: 'T-Bar Row Machine', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Incline DB Press', targetSets: 3, targetReps: '8–10', isCore: false }, { name: 'Lat Pulldown', targetSets: 3, targetReps: '10–12', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Tricep Pushdowns', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Hanging Leg Raise', targetSets: 3, targetReps: '12', isCore: true }, { name: 'Decline Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
-      wed: { label: 'Pull', color: '#00d4aa', exercises: [ { name: 'Weighted Pull-ups', targetSets: 4, targetReps: '6–10', isCore: false }, { name: 'Cable Row', targetSets: 4, targetReps: '10–12', isCore: false }, { name: 'Rear Delt Fly', targetSets: 3, targetReps: '15–20', isCore: false }, { name: 'Hammer Curls', targetSets: 3, targetReps: '12', isCore: false } ] },
+      wed: { label: 'Pull', color: '#00d4aa', exercises: [ { name: 'Weighted Pull-ups', targetSets: 4, targetReps: '6–10', isCore: false }, { name: 'Cable Row', targetSets: 4, targetReps: '10–12', isCore: false }, { name: 'Rear Delt Fly', targetSets: 3, targetReps: '15–20', isCore: false }, { name: 'Hammer Curls', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Facepulls', targetSets: 2, targetReps: '15–20', isCore: false } ] },
       thu: { label: 'Legs – Quad', color: '#ffd60a', exercises: [ { name: 'Hack Squat', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Leg Press', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Leg Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Standing Calf Raise', targetSets: 4, targetReps: '15–20', isCore: false } ] },
       fri: { label: 'Push', color: '#ff9f1c', exercises: [ { name: 'Machine Shoulder Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Smith / DB Incline Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Pec Deck', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Overhead Tricep Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
       sun: { label: 'Lower – Posterior', color: '#a29bfe', exercises: [ { name: 'Romanian Deadlift', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Walking Lunges', targetSets: 3, targetReps: '12 each', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Good Mornings', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Seated Calf Raise', targetSets: 3, targetReps: '15–20', isCore: false } ] }
@@ -453,7 +460,6 @@
     function getSuppConfig() { 
       try { 
         const d = JSON.parse(localStorage.getItem('supplements_config')); 
-        // Ensure the parsed data is actually a valid array WITH items before overriding defaults
         return (Array.isArray(d) && d.length > 0) ? d : DEFAULT_SUPPS; 
       } catch { 
         return DEFAULT_SUPPS; 
@@ -514,7 +520,14 @@
       }
     }
 
-    function findNextWorkoutDay() { const keys = ['mon','tue','wed','thu','fri','sat','sun']; for (let i = 1; i <= 7; i++) { const k = keys[(keys.indexOf(todayKey()) + i) % 7]; if (PROGRAM[k]) return k; } return 'mon'; }
+    function findNextWorkoutDay() { 
+      const keys = ['mon','tue','wed','thu','fri','sat','sun']; 
+      for (let i = 1; i <= 7; i++) { 
+        const k = keys[(keys.indexOf(todayKey()) + i) % 7]; 
+        if (PROGRAM[k]) return k; 
+      } 
+      return 'mon'; 
+    }
 
     function renderHome() {
       const dk = todayKey();
@@ -523,25 +536,37 @@
       const banner = document.getElementById('resume-banner');
       if (activeSession) banner.classList.remove('hidden'); else banner.classList.add('hidden');
 
+      const log = getLog(); 
+      const weekStart = getWeekStart(); 
+      const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+      const weekLogs = log.filter(s => { const sd = getBioDate(s.date); return sd >= weekStart && sd < weekEnd; });
+      const completedDays = new Set(weekLogs.map(s => s.dayKey));
+
+      const todayStr = getBioDate().toDateString();
+      const hasCompletedToday = weekLogs.some(s => s.dayKey === dk && getBioDate(s.date).toDateString() === todayStr);
+
       const todayCard = document.getElementById('today-card-e5f6');
-      if (PROGRAM[dk]) {
+      if (PROGRAM[dk] && !hasCompletedToday) {
         const day = PROGRAM[dk];
         todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary">START WORKOUT →</button>`;
         document.getElementById('start-today-btn').addEventListener('click', () => { if (!activeSession) startWorkout(dk); switchView('log'); });
       } else {
-        const nextDk = findNextWorkoutDay(); const nextDay = PROGRAM[nextDk];
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Rest Day</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">🥩 Hit your rest day macro targets</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
+        let nextDk = dk;
+        for (let i = 1; i <= 7; i++) { const k = DAY_MAP[(DAY_MAP.indexOf(dk) + i) % 7]; if (PROGRAM[k]) { nextDk = k; break; } }
+        const nextDay = PROGRAM[nextDk];
+        const isRestDay = !PROGRAM[dk];
+        
+        const headerText = isRestDay ? "Rest Day" : "Workout Complete";
+        const subText = isRestDay ? "🥩 Hit your rest day macro targets" : "🎉 Awesome job crushing it today.";
+        
+        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">${headerText}</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">${subText}</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
         document.getElementById('start-next-btn').addEventListener('click', () => { if (!activeSession) startWorkout(nextDk); switchView('log'); });
       }
-
-      const container = document.getElementById('week-cal-g7h8');
-      const log = getLog(); const weekStart = getWeekStart(); const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
-      const weekLogs = log.filter(s => { const sd = getBioDate(s.date); return sd >= weekStart && sd < weekEnd; });
-      const completedDays = new Set(weekLogs.map(s => s.dayKey));
 
       let wVol = 0; weekLogs.forEach(s => wVol += totalVolume(s));
       document.getElementById('weekly-volume-stat').textContent = `${wVol.toLocaleString()} lbs lifted`;
 
+      const container = document.getElementById('week-cal-g7h8');
       container.innerHTML = WEEK_ORDER.map(k => `<div class="flex flex-col items-center gap-1"><button class="week-dot ${completedDays.has(k) ? 'completed' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled')} ${k === todayKey() ? 'today' : ''}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`).join('');
       container.querySelectorAll('.week-dot').forEach(dot => dot.addEventListener('click', () => { if (PROGRAM[dot.dataset.daykey]) { if(!activeSession) startWorkout(dot.dataset.daykey); switchView('log'); } }));
 
@@ -570,8 +595,11 @@
     function renderLogView() {
       if (!activeSession) {
         const dk = todayKey();
+        const todayStr = getBioDate().toDateString();
+        const hasCompletedToday = getLog().some(s => s.dayKey === dk && getBioDate(s.date).toDateString() === todayStr);
+
         let targetDay = dk;
-        if (!PROGRAM[dk]) targetDay = findNextWorkoutDay();
+        if (!PROGRAM[dk] || hasCompletedToday) targetDay = findNextWorkoutDay();
         const dayInfo = PROGRAM[targetDay];
 
         document.getElementById('log-day-label-m3n4').textContent = 'Ready to train?';
@@ -1044,8 +1072,26 @@
     loadActiveSession();
     renderHome();
   </script>
+  
+  <!-- Bulletproof Auto-Update Registration Engine -->
   <script>
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js')); }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          // Force standard check for sw.js byte changes on load
+          reg.update();
+        });
+      });
+
+      // Automated layout hot-swap listener
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload(); // Hard refresh the shell cleanly without wiping local database
+        }
+      });
+    }
   </script>
 </body>
 </html>
