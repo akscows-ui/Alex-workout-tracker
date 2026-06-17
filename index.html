@@ -229,9 +229,12 @@
 
     <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Quick Add Meal</h2>
     <div class="card mb-6 space-y-3">
-      <div class="autocomplete-wrapper">
-        <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
-        <div id="autocomplete-list" class="autocomplete-list"></div>
+      <div class="flex gap-2">
+        <div class="autocomplete-wrapper flex-1">
+          <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
+          <div id="autocomplete-list" class="autocomplete-list"></div>
+        </div>
+        <input type="number" id="diet-input-qty" value="1" min="0.1" step="0.1" class="w-20 text-center" placeholder="Qty" />
       </div>
       <div class="flex gap-3">
         <input type="number" id="diet-input-cal" placeholder="Calories" class="w-1/2" />
@@ -791,6 +794,7 @@
        const m = getSavedMeals().find(x => x.id === id);
        if(m) {
           document.getElementById('diet-input-name').value = m.name;
+          document.getElementById('diet-input-qty').value = '1';
           document.getElementById('diet-input-cal').value = m.cal;
           document.getElementById('diet-input-p').value = m.p;
           document.getElementById('diet-input-c').value = m.c;
@@ -830,31 +834,71 @@
     });
 
     document.getElementById('diet-add-btn').addEventListener('click', () => {
-      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const cal = parseInt(document.getElementById('diet-input-cal').value) || 0; const p = parseInt(document.getElementById('diet-input-p').value) || 0;
-      const c = parseInt(document.getElementById('diet-input-c').value) || 0; const f = parseInt(document.getElementById('diet-input-f').value) || 0;
-      if(cal===0 && p===0) return;
+      const nameBase = document.getElementById('diet-input-name').value || 'Manual Entry';
+      const qty = parseFloat(document.getElementById('diet-input-qty').value) || 1;
+      const name = qty !== 1 ? `${nameBase} (x${qty})` : nameBase;
+
+      const baseCal = parseFloat(document.getElementById('diet-input-cal').value) || 0; 
+      const baseP = parseFloat(document.getElementById('diet-input-p').value) || 0;
+      const baseC = parseFloat(document.getElementById('diet-input-c').value) || 0; 
+      const baseF = parseFloat(document.getElementById('diet-input-f').value) || 0;
       
-      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); saveDietLog(log);
-      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
+      if(baseCal===0 && baseP===0) return;
+      
+      const cal = Math.round(baseCal * qty);
+      const p = Math.round(baseP * qty);
+      const c = Math.round(baseC * qty);
+      const f = Math.round(baseF * qty);
+      
+      const log = getDietLog(); 
+      log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); 
+      saveDietLog(log);
+      
+      document.getElementById('diet-input-name').value = ''; 
+      document.getElementById('diet-input-qty').value = '1';
+      document.getElementById('diet-input-cal').value = ''; 
+      document.getElementById('diet-input-p').value = ''; 
+      document.getElementById('diet-input-c').value = ''; 
+      document.getElementById('diet-input-f').value = ''; 
+      renderDiet();
     });
 
     document.getElementById('diet-save-add-btn').addEventListener('click', () => {
-      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const cal = parseInt(document.getElementById('diet-input-cal').value) || 0; const p = parseInt(document.getElementById('diet-input-p').value) || 0;
-      const c = parseInt(document.getElementById('diet-input-c').value) || 0; const f = parseInt(document.getElementById('diet-input-f').value) || 0;
-      if(cal===0 && p===0) return;
-      
-      const mealData = { name, cal, p, c, f };
-      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), ...mealData }); saveDietLog(log);
+      const nameBase = document.getElementById('diet-input-name').value || 'Manual Entry';
+      const qty = parseFloat(document.getElementById('diet-input-qty').value) || 1;
+      const name = qty !== 1 ? `${nameBase} (x${qty})` : nameBase;
 
+      const baseCal = parseFloat(document.getElementById('diet-input-cal').value) || 0; 
+      const baseP = parseFloat(document.getElementById('diet-input-p').value) || 0;
+      const baseC = parseFloat(document.getElementById('diet-input-c').value) || 0; 
+      const baseF = parseFloat(document.getElementById('diet-input-f').value) || 0;
+      
+      if(baseCal===0 && baseP===0) return;
+      
+      const cal = Math.round(baseCal * qty);
+      const p = Math.round(baseP * qty);
+      const c = Math.round(baseC * qty);
+      const f = Math.round(baseF * qty);
+      
+      const mealDataLog = { name, cal, p, c, f };
+      const log = getDietLog(); 
+      log.push({ id: Date.now().toString(), time: new Date().toISOString(), ...mealDataLog }); 
+      saveDietLog(log);
+
+      const mealDataBase = { name: nameBase, cal: baseCal, p: baseP, c: baseC, f: baseF };
       let saved = getSavedMeals();
-      const existingIdx = saved.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
-      if(existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...mealData };
-      else saved.push({ id: 'sm'+Date.now().toString(), ...mealData });
+      const existingIdx = saved.findIndex(x => x.name.toLowerCase() === nameBase.toLowerCase());
+      if(existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...mealDataBase };
+      else saved.push({ id: 'sm'+Date.now().toString(), ...mealDataBase });
       setSavedMeals(saved);
 
-      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
+      document.getElementById('diet-input-name').value = ''; 
+      document.getElementById('diet-input-qty').value = '1';
+      document.getElementById('diet-input-cal').value = ''; 
+      document.getElementById('diet-input-p').value = ''; 
+      document.getElementById('diet-input-c').value = ''; 
+      document.getElementById('diet-input-f').value = ''; 
+      renderDiet();
     });
 
     document.getElementById('diet-export-btn').addEventListener('click', () => {
