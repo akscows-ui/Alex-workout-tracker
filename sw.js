@@ -7,6 +7,14 @@ const ASSETS = [
   '/icon-512.png'
 ];
 
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force the waiting service worker to become the active service worker
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim()); // Instantly take control of all open pages
+});
+
 // Install event: Cache the core files
 self.addEventListener('install', (e) => {
   e.waitUntil(
