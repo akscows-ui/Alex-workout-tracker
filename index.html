@@ -142,6 +142,7 @@
 </head>
 <body>
 
+  <!-- ==================== HOME VIEW ==================== -->
   <div id="view-home" class="view active px-5 pt-6 pb-4">
     <header class="mb-6">
       <h1 class="text-2xl font-black gradient-text tracking-tight">ALEX TRACKER</h1>
@@ -170,6 +171,7 @@
     <section id="last-session-i9j0" class="card mb-4" style="display:none;"></section>
   </div>
 
+  <!-- ==================== LOG VIEW ==================== -->
   <div id="view-log" class="view px-5 pt-4 pb-4">
     <div id="log-sticky-k1l2" class="sticky top-0 z-50 pb-3 pt-2 transition-colors duration-300" style="background:var(--bg);">
       <div class="flex items-center justify-between mb-2">
@@ -186,10 +188,11 @@
     </div>
     <div id="log-exercises-w3x4" class="space-y-4 mt-2"></div>
     <div class="mt-6 mb-4">
-      <button id="finish-btn-y5z6" class="btn-primary" disabled>FINISH WORKOUT</button>
+      <button id="finish-btn-y5z6" class="btn-primary" disabled style="display:none;">FINISH WORKOUT</button>
     </div>
   </div>
 
+  <!-- ==================== DIET VIEW ==================== -->
   <div id="view-diet" class="view px-5 pt-6 pb-4">
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-2xl font-black gradient-text">Nutrition</h1>
@@ -217,6 +220,7 @@
       </div>
     </div>
 
+    <!-- Supplement Tracker -->
     <div class="flex items-center justify-between mb-3 mt-8">
       <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest">Daily Supplements</h2>
       <button id="supp-edit-btn" class="text-[10px] font-bold text-[#6b6b80] underline">Edit Stack</button>
@@ -249,6 +253,7 @@
     <button id="diet-export-btn" class="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Diet Data (CSV)</button>
   </div>
 
+  <!-- ==================== HISTORY VIEW ==================== -->
   <div id="view-history" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">History</h1>
     <div id="history-list-a1b1" class="space-y-3 mb-8"></div>
@@ -264,12 +269,14 @@
     </div>
   </div>
 
+  <!-- ==================== PROGRESS VIEW ==================== -->
   <div id="view-progress" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">Progress</h1>
     <div class="mb-4"><select id="progress-select-c2d2"></select></div>
     <div id="progress-content-e3f3"><p class="text-sm text-[#6b6b80]">Select an exercise to view progress</p></div>
   </div>
 
+  <!-- ==================== MODALS & OVERLAYS ==================== -->
   <div id="rest-overlay-g4h4" class="rest-overlay" style="display:none;">
     <div class="rest-sheet">
       <p class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Rest Timer</p>
@@ -469,10 +476,6 @@
     }
 
     function switchView(name) {
-      if (name === 'log' && !activeSession) {
-        const dk = todayKey();
-        if (PROGRAM[dk]) startWorkout(dk); else { const nextDk = findNextWorkoutDay(); if (nextDk) startWorkout(nextDk); }
-      }
       currentView = name;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + name)?.classList.add('active');
@@ -482,7 +485,11 @@
       if (name === 'diet') renderDiet();
       if (name === 'history') renderHistory();
       if (name === 'progress') renderProgress();
-      if (name === 'log' && activeSession) { requestWakeLock(); startTimer(); renderLogView(); } else { releaseWakeLock(); }
+      if (name === 'log') { 
+        if (activeSession) { requestWakeLock(); startTimer(); } 
+        else { releaseWakeLock(); if (timerInterval) clearInterval(timerInterval); document.getElementById('log-timer-o5p6').textContent = '00:00'; }
+        renderLogView(); 
+      }
     }
 
     function findNextWorkoutDay() { const keys = ['mon','tue','wed','thu','fri','sat','sun']; for (let i = 1; i <= 7; i++) { const k = keys[(keys.indexOf(todayKey()) + i) % 7]; if (PROGRAM[k]) return k; } return 'mon'; }
@@ -498,11 +505,11 @@
       if (PROGRAM[dk]) {
         const day = PROGRAM[dk];
         todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary">START WORKOUT →</button>`;
-        document.getElementById('start-today-btn').addEventListener('click', () => { switchView('log'); });
+        document.getElementById('start-today-btn').addEventListener('click', () => { if (!activeSession) startWorkout(dk); switchView('log'); });
       } else {
         const nextDk = findNextWorkoutDay(); const nextDay = PROGRAM[nextDk];
         todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Rest Day</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">🥩 Hit your rest day macro targets</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
-        document.getElementById('start-next-btn').addEventListener('click', () => { switchView('log'); });
+        document.getElementById('start-next-btn').addEventListener('click', () => { if (!activeSession) startWorkout(nextDk); switchView('log'); });
       }
 
       const container = document.getElementById('week-cal-g7h8');
@@ -539,7 +546,34 @@
     }
 
     function renderLogView() {
-      if (!activeSession) return;
+      if (!activeSession) {
+        const dk = todayKey();
+        let targetDay = dk;
+        if (!PROGRAM[dk]) targetDay = findNextWorkoutDay();
+        const dayInfo = PROGRAM[targetDay];
+
+        document.getElementById('log-day-label-m3n4').textContent = 'Ready to train?';
+        document.getElementById('log-day-label-m3n4').style.color = 'var(--text)';
+        document.getElementById('log-progress-txt-u1v2').textContent = 'No active session';
+        document.getElementById('log-progress-s9t0').style.width = '0%';
+        document.getElementById('finish-btn-y5z6').style.display = 'none';
+
+        const container = document.getElementById('log-exercises-w3x4');
+        container.innerHTML = `
+          <div class="card text-center py-10 mt-4 border-dashed border-2 border-[var(--border)] bg-transparent">
+            <p class="text-4xl mb-3">⚡</p>
+            <p class="text-sm text-[#6b6b80] mb-6">Up next: <strong style="color:${dayInfo.color}">${dayInfo.label}</strong></p>
+            <button id="log-start-empty-btn" class="btn-primary w-3/4 py-3 mx-auto" style="background:linear-gradient(135deg,${dayInfo.color},${dayInfo.color}cc);">START WORKOUT</button>
+          </div>
+        `;
+        document.getElementById('log-start-empty-btn').addEventListener('click', () => {
+           startWorkout(targetDay);
+           switchView('log');
+        });
+        return;
+      }
+
+      document.getElementById('finish-btn-y5z6').style.display = 'block';
       const day = PROGRAM[activeSession.dayKey] || { label: 'Custom', color: '#6c63ff' };
       document.getElementById('log-day-label-m3n4').textContent = day.label; document.getElementById('log-day-label-m3n4').style.color = day.color;
       document.getElementById('log-progress-s9t0').style.background = day.color;
