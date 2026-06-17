@@ -142,7 +142,6 @@
 </head>
 <body>
 
-  <!-- ==================== HOME VIEW ==================== -->
   <div id="view-home" class="view active px-5 pt-6 pb-4">
     <header class="mb-6">
       <h1 class="text-2xl font-black gradient-text tracking-tight">ALEX TRACKER</h1>
@@ -171,7 +170,6 @@
     <section id="last-session-i9j0" class="card mb-4" style="display:none;"></section>
   </div>
 
-  <!-- ==================== LOG VIEW ==================== -->
   <div id="view-log" class="view px-5 pt-4 pb-4">
     <div id="log-sticky-k1l2" class="sticky top-0 z-50 pb-3 pt-2 transition-colors duration-300" style="background:var(--bg);">
       <div class="flex items-center justify-between mb-2">
@@ -192,7 +190,6 @@
     </div>
   </div>
 
-  <!-- ==================== DIET VIEW ==================== -->
   <div id="view-diet" class="view px-5 pt-6 pb-4">
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-2xl font-black gradient-text">Nutrition</h1>
@@ -220,7 +217,6 @@
       </div>
     </div>
 
-    <!-- Supplement Tracker -->
     <div class="flex items-center justify-between mb-3 mt-8">
       <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest">Daily Supplements</h2>
       <button id="supp-edit-btn" class="text-[10px] font-bold text-[#6b6b80] underline">Edit Stack</button>
@@ -229,12 +225,12 @@
 
     <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Quick Add Meal</h2>
     <div class="card mb-6 space-y-3">
-      <div class="flex gap-2">
-        <div class="autocomplete-wrapper flex-1">
+      <div class="flex gap-3">
+        <div class="autocomplete-wrapper" style="width: 75%;">
           <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
           <div id="autocomplete-list" class="autocomplete-list"></div>
         </div>
-        <input type="number" id="diet-input-qty" value="1" min="0.1" step="0.1" class="w-20 text-center" placeholder="Qty" />
+        <input type="number" id="diet-input-qty" value="1" min="0.1" step="0.1" class="text-center" style="width: 25%;" placeholder="Qty" />
       </div>
       <div class="flex gap-3">
         <input type="number" id="diet-input-cal" placeholder="Calories" class="w-1/2" />
@@ -256,7 +252,6 @@
     <button id="diet-export-btn" class="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Diet Data (CSV)</button>
   </div>
 
-  <!-- ==================== HISTORY VIEW ==================== -->
   <div id="view-history" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">History</h1>
     <div id="history-list-a1b1" class="space-y-3 mb-8"></div>
@@ -272,14 +267,12 @@
     </div>
   </div>
 
-  <!-- ==================== PROGRESS VIEW ==================== -->
   <div id="view-progress" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">Progress</h1>
     <div class="mb-4"><select id="progress-select-c2d2"></select></div>
     <div id="progress-content-e3f3"><p class="text-sm text-[#6b6b80]">Select an exercise to view progress</p></div>
   </div>
 
-  <!-- ==================== MODALS & OVERLAYS ==================== -->
   <div id="rest-overlay-g4h4" class="rest-overlay" style="display:none;">
     <div class="rest-sheet">
       <p class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Rest Timer</p>
@@ -392,10 +385,9 @@
     document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
     const ALTERNATIVES = {
-      'Pec Deck': ['Cable Crossovers', 'Machine Flyes', 'Flat DB Flyes', 'Supine Press'],
-      'Smith / DB Incline Press': ['Supine Press', 'Flat Barbell Press', 'Machine Chest Press'],
-      'Incline DB Press': ['Supine Press', 'Incline Barbell Press', 'Machine Chest Press'],
+      'Pec Deck': ['Cable Crossovers', 'Machine Flyes', 'Flat DB Flyes'],
       'T-Bar Row Machine': ['Seated Cable Row', 'Chest-Supported DB Row', 'Barbell Row'],
+      'Incline DB Press': ['Incline Barbell Press', 'Incline Machine Press'],
       'Lat Pulldown': ['Pull-ups', 'Assisted Pull-ups', 'Straight Arm Pulldown'],
       'Hack Squat': ['Barbell Squat', 'Goblet Squat', 'Leg Press'],
       'Romanian Deadlift': ['Stiff-Leg Deadlift', 'Lying Leg Curl', 'Good Mornings'],
@@ -410,22 +402,6 @@
       fri: { label: 'Push', color: '#ff9f1c', exercises: [ { name: 'Machine Shoulder Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Smith / DB Incline Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Pec Deck', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Overhead Tricep Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
       sun: { label: 'Lower – Posterior', color: '#a29bfe', exercises: [ { name: 'Romanian Deadlift', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Walking Lunges', targetSets: 3, targetReps: '12 each', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Good Mornings', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Seated Calf Raise', targetSets: 3, targetReps: '15–20', isCore: false } ] }
     };
-
-    const DEFAULT_SUPPS = [
-      { id: 's1', time: 'morning', name: 'Kirkland Daily Multi', note: '2 tablets with breakfast' },
-      { id: 's2', time: 'morning', name: 'Vital Choice D3 + K2 MK-7', note: 'Take with fat-containing meal' },
-      { id: 's3', time: 'morning', name: 'Sports Research Omega-3', note: '1-2 softgels with fat-containing meal' },
-      { id: 's4', time: 'morning', name: 'Zinc Picolinate 15-25mg', note: 'With full meal — not fasted' },
-      { id: 's5', time: 'morning', name: 'Jarrow Methyl B12', note: 'Sublingual — methylcobalamin' },
-      { id: 's6', time: 'morning', name: 'Lion\'s Mane + Alpha-GPC', note: 'Cognitive Primer stack' },
-      { id: 's7', time: 'morning', name: 'L-Theanine 200mg', note: 'With morning coffee' },
-      { id: 's8', time: 'morning', name: 'Bacopa Monnieri 300mg', note: 'With food' },
-      { id: 's9', time: 'other', name: 'Creatine Monohydrate 5g', note: 'Morning or post-workout' },
-      { id: 's10', time: 'other', name: 'Transparent Labs BULK', note: '1 scoop 20-30 min pre-workout' },
-      { id: 's11', time: 'evening', name: 'Magnesium Glycinate 240mg', note: '2 capsules ONLY (avoid upper limit)' },
-      { id: 's12', time: 'evening', name: 'Jarrow KSM-66 Ashwagandha', note: '600mg for cortisol/sleep support' },
-      { id: 's13', time: 'evening', name: 'CJC-1295 + Ipamorelin', note: '10:30 PM (Requires 2-hour fast prior)' }
-    ];
 
     const DAY_MAP = ['sun','mon','tue','wed','thu','fri','sat'];
     const DAY_LABELS = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
@@ -624,13 +600,7 @@
         container.appendChild(card);
       });
 
-      const bindInp = (c, k, pFunc) => container.querySelectorAll(c).forEach(i => i.addEventListener('input', e => { 
-        let val = pFunc(e.target.value);
-        if (typeof val === 'number' && isNaN(val)) val = '';
-        activeSession.exercises[parseInt(e.target.dataset.ei)].sets[parseInt(e.target.dataset.si)][k] = val; 
-        saveActiveSession(); 
-        updateProgress(); 
-      }));
+      const bindInp = (c, k, pFunc) => container.querySelectorAll(c).forEach(i => i.addEventListener('input', e => { const val = pFunc(e.target.value); activeSession.exercises[parseInt(e.target.dataset.ei)].sets[parseInt(e.target.dataset.si)][k] = isNaN(val) && typeof val === 'number' ? '' : val; saveActiveSession(); updateProgress(); }));
       bindInp('.weight-input', 'weight', parseFloat); bindInp('.reps-input', 'reps', parseInt); bindInp('.rir-input', 'rir', v => v);
       
       container.querySelectorAll('.set-check').forEach(btn => btn.addEventListener('click', e => toggleSet(parseInt(e.currentTarget.dataset.ei), parseInt(e.currentTarget.dataset.si))));
@@ -675,7 +645,7 @@
     }
 
     // ===========================
-    // DIET & SUPPLEMENTS VIEW
+    // DIET VIEW
     // ===========================
     function renderDiet() {
       const isRest = REST_DAYS.includes(todayKey());
@@ -927,7 +897,7 @@
     // FINISH & SAVE
     // ===========================
     function showRestTimer(seconds) { if (restTimerInterval) clearInterval(restTimerInterval); lastRestTotal = seconds; restTimeLeft = seconds; document.getElementById('rest-overlay-g4h4').style.display = 'flex'; updateRestDisplay(); restTimerInterval = setInterval(() => { restTimeLeft--; if (restTimeLeft <= 0) { clearInterval(restTimerInterval); playBeep(); vibrate(); setTimeout(dismissRest, 500); } updateRestDisplay(); }, 1000); }
-    function updateRestDisplay() { document.getElementById('rest-time-txt-k6l6').textContent = `${Math.floor(restTimeLeft/60)}:${String(restTimeLeft%60).padStart(2,'0')}`; document.getElementById('rest-ring-i5j5').style.strokeDashoffset = 326.7 * (1 - (restTimeLeft/lastRestTotal)); }
+    function updateRestDisplay() { document.getElementById('rest-time-txt-k6l6').textContent = `${Math.floor(restTimeLeft/60)}:${String(restTimeLeft%60).padStart(2,'0')}`; document.getElementById('rest-ring-i5j5').style.strokeDashoffset = 326.7 * (restTimeLeft/lastRestTotal); }
     function dismissRest() { if (restTimerInterval) clearInterval(restTimerInterval); document.getElementById('rest-overlay-g4h4').style.display = 'none'; }
 
     function showFinishModal() {
