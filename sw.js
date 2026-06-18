@@ -1,40 +1,32 @@
-const CACHE_NAME = 'alex-tracker-v2';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
-];
+const CACHE_NAME = 'alex-tracker-v8';
 
+// Instantly kill the old service worker when a new one is found
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker
+  self.skipWaiting(); 
 });
 
+// Instantly take control of the app
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim()); // Instantly take control of all open pages
+  event.waitUntil(clients.claim()); 
 });
 
-// Install event: Cache the core files
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate event: Take control immediately
-self.addEventListener('activate', (e) => {
-  self.clients.claim();
-});
-
-// Fetch event: Serve from cache if available, otherwise go to network
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      return cachedResponse || fetch(e.request);
-    })
-  );
+// Network-first strategy for the HTML file so you never get stuck again
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+  } else {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+          });
+          return networkResponse;
+        });
+        return cachedResponse || fetchPromise;
+      })
+    );
+  }
 });
