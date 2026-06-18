@@ -39,14 +39,14 @@
     html, body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; touch-action: manipulation; }
     body { padding-bottom: 80px; min-height: 100vh; min-height: 100dvh; }
 
-    input[type="number"], input[type="text"] {
+    input[type="number"], input[type="text"], input[type="date"] {
       background: var(--elevated); border: 1.5px solid var(--border); border-radius: 8px;
       color: #fff; font-size: 15px; font-weight: 600; text-align: center; padding: 8px 4px;
       width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -moz-appearance: textfield;
     }
-    input[type="text"].left-align { text-align: left; padding-left: 12px; }
+    input[type="text"].left-align, input[type="date"].left-align { text-align: left; padding-left: 12px; }
     input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type="number"]:focus, input[type="text"]:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
+    input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
 
     .view { display: none; animation: fadeIn 0.25s ease; }
     .view.active { display: block; }
@@ -54,6 +54,7 @@
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     @keyframes confettiFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
     @keyframes prBanner { 0% { transform: scale(0.5) translateY(-20px); opacity: 0; } 50% { transform: scale(1.1) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    @keyframes pulseGreen { 0% { background-color: rgba(0, 212, 170, 0.35); } 100% { background-color: transparent; } }
 
     .gradient-text { background: linear-gradient(135deg, var(--purple), var(--teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: transform 0.15s ease; }
@@ -78,10 +79,11 @@
     .ring-progress { stroke: var(--teal); transition: stroke-dashoffset 0.5s linear; stroke-linecap: round; }
     .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #fff; }
 
-    .set-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; transition: opacity 0.2s; }
+    .set-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; transition: opacity 0.2s; border-radius: 8px; margin: 2px -4px; padding-left: 4px; padding-right: 4px; }
     .set-row.completed:not(.is-warmup) { opacity: 0.6; }
     .set-row.completed.is-warmup { opacity: 0.4; }
     .set-row.completed .set-label { text-decoration: line-through; }
+    .set-row.pulse-animate { animation: pulseGreen 0.6s ease-out forwards; }
     .set-check { width: 36px; height: 36px; border-radius: 10px; border: 2px solid var(--border); background: var(--elevated); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; color: transparent; font-size: 16px; }
     .set-check.checked { background: var(--teal); border-color: var(--teal); color: #fff; }
     
@@ -99,12 +101,11 @@
 
     .prev-data { font-size: 12px; color: var(--text-muted); padding: 6px 12px; background: rgba(108,99,255,0.06); border-radius: 8px; margin-bottom: 8px; line-height: 1.6; }
 
-    .week-dot { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; border: 2px solid transparent; }
+    .week-dot { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
     .week-dot:active { transform: scale(0.9); }
-    .week-dot.completed { background: var(--teal); color: #000; }
     .week-dot.scheduled { border-color: var(--purple); color: var(--purple); }
     .week-dot.rest { background: var(--elevated); color: var(--text-dim); }
-    .week-dot.today { box-shadow: 0 0 0 3px rgba(108,99,255,0.35); }
+    .week-dot.today { box-shadow: 0 0 0 4px rgba(108,99,255,0.25); }
 
     .confetti-piece { position: fixed; top: -10px; z-index: 400; width: 8px; height: 8px; border-radius: 2px; animation: confettiFall linear forwards; pointer-events: none; }
     .pr-banner { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 250; background: linear-gradient(135deg, var(--gold), #ffaa00); color: #000; font-weight: 800; font-size: 16px; padding: 12px 28px; border-radius: 14px; animation: prBanner 0.4s ease forwards; box-shadow: 0 4px 24px rgba(255,214,10,0.4); }
@@ -122,6 +123,13 @@
 
     textarea { background: var(--elevated); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; padding: 10px 12px; width: 100%; resize: none; outline: none; font-family: inherit; }
     textarea:focus { border-color: var(--purple); }
+    
+    /* Hide default checkbox UI */
+    .toggle-checkbox { appearance: none; width: 44px; height: 24px; background: var(--elevated); border-radius: 12px; position: relative; cursor: pointer; outline: none; border: 1px solid var(--border); transition: 0.3s; }
+    .toggle-checkbox::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: var(--text-muted); border-radius: 50%; transition: 0.3s; }
+    .toggle-checkbox:checked { background: var(--gold); border-color: var(--gold); }
+    .toggle-checkbox:checked::after { background: #000; transform: translateX(20px); }
+
     select { background: var(--elevated); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; padding: 12px 16px; width: 100%; outline: none; font-family: inherit; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
     select:focus { border-color: var(--purple); }
 
@@ -144,11 +152,25 @@
 
   <!-- ==================== HOME VIEW ==================== -->
   <div id="view-home" class="view active px-5 pt-6 pb-4">
-    <header class="mb-6">
-      <h1 class="text-2xl font-black gradient-text tracking-tight">ALEX TRACKER</h1>
-      <p id="date-today-c3d4" class="text-sm text-[#6b6b80] mt-1 font-medium"></p>
+    <header class="mb-6 flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[var(--purple)] to-[var(--teal)] tracking-tight" style="line-height: 1.1;">ALEX TRACKER</h1>
+        <p id="date-today-c3d4" class="text-sm text-[#6b6b80] mt-1 font-medium"></p>
+      </div>
     </header>
     
+    <!-- Training Block Module -->
+    <div class="flex justify-between items-center mb-6 cursor-pointer bg-[var(--elevated)] p-4 rounded-2xl border border-[var(--border)]" id="block-tracker-ui">
+      <div>
+          <p class="text-[10px] font-bold text-[var(--purple)] uppercase tracking-widest mb-1">Training Block</p>
+          <h2 class="text-lg font-black" id="block-week-text">Off-Season</h2>
+      </div>
+      <div class="text-right flex items-center gap-3">
+          <span id="deload-indicator" class="hidden text-xs bg-[rgba(255,214,10,0.15)] text-[var(--gold)] px-2 py-1 rounded-md font-bold">⚠️ DELOAD</span>
+          <span class="text-xl opacity-60">⚙️</span>
+      </div>
+    </div>
+
     <div id="resume-banner" class="mb-4 hidden cursor-pointer" onclick="switchView('log')">
       <div class="card border-[var(--teal)] bg-[rgba(0,212,170,0.05)] py-4 flex items-center justify-between">
         <div>
@@ -280,6 +302,33 @@
   </div>
 
   <!-- ==================== MODALS & OVERLAYS ==================== -->
+  <div id="block-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <h3 class="text-lg font-black mb-4">Training Block Settings</h3>
+      <div class="space-y-4 mb-6">
+        <div>
+          <label class="text-xs font-bold text-[#6b6b80] uppercase block mb-1">Block Start Date</label>
+          <input type="date" id="block-start-date" class="left-align text-sm" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-[#6b6b80] uppercase block mb-1">Total Weeks</label>
+          <input type="number" id="block-total-weeks" placeholder="e.g., 16" value="16" />
+        </div>
+        <div class="flex items-center justify-between p-4 bg-[var(--elevated)] rounded-xl border border-[var(--border)]">
+          <div>
+            <p class="text-sm font-bold text-[var(--gold)]">Deload Mode</p>
+            <p class="text-[10px] text-[#6b6b80] mt-1">Cuts all target sets by 40%</p>
+          </div>
+          <input type="checkbox" id="block-deload-toggle" class="toggle-checkbox" />
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button id="block-cancel-btn" class="flex-1 text-sm font-bold text-[#6b6b80] bg-[var(--elevated)] py-3 rounded-xl">Cancel</button>
+        <button id="block-save-btn" class="flex-1 text-sm font-bold text-white bg-[var(--purple)] py-3 rounded-xl">Save</button>
+      </div>
+    </div>
+  </div>
+
   <div id="rest-overlay-g4h4" class="rest-overlay" style="display:none;">
     <div class="rest-sheet">
       <p class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Rest Timer</p>
@@ -389,7 +438,6 @@
     let wakeLock = null;
     async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
     function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
-    document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
     // Biological Day Logic: Offset mathematically by exactly 4 hours (14,400,000 ms)
     const getBioDate = (dateVal) => {
@@ -439,15 +487,24 @@
     const REST_DAYS = ['tue','sat'];
     const COMPOUND_EXERCISES = ['Weighted Pull-ups','Hack Squat','Leg Press','Romanian Deadlift','Incline DB Press','Smith / DB Incline Press','Machine Shoulder Press','T-Bar Row Machine','Walking Lunges','Good Mornings'];
 
-    const DEFAULT_TARGETS = { training: { cal: 3675, p: 250, c: 460, f: 80 }, rest: { cal: 3200, p: 230, c: 350, f: 75 } };
+    // Core Audit Patch: Strict macro targets
+    const DEFAULT_TARGETS = { training: { cal: 3640, p: 210, c: 482, f: 97 }, rest: { cal: 3125, p: 200, c: 390, f: 85 } };
     function getTargets() { try { return JSON.parse(localStorage.getItem('diet_targets')) || DEFAULT_TARGETS; } catch { return DEFAULT_TARGETS; } }
 
     let currentView = 'home';
     let activeSession = null; 
-    let timerInterval = null; let restTimerInterval = null; let lastRestTotal = 90; let restTimeLeft = 0;
+    let timerInterval = null; 
+    let restTimerInterval = null; let restEndTime = 0; let lastRestTotal = 90; 
     let deleteTargetId = null; let deleteTargetType = null; let activeSwapEi = null; let travelModeActive = false;
 
-    // Defensively parse LocalStorage data to protect against cache corruption or empty truthy objects
+    // Block Config Logic
+    function getBlockConfig() { 
+        try { return JSON.parse(localStorage.getItem('block_config')) || { startDate: '', totalWeeks: 16, isDeload: false }; } 
+        catch { return { startDate: '', totalWeeks: 16, isDeload: false }; } 
+    }
+    function saveBlockConfig(c) { localStorage.setItem('block_config', JSON.stringify(c)); }
+
+    // Defensively parse LocalStorage data
     function getLog() { try { const d = JSON.parse(localStorage.getItem('workout_log')); return Array.isArray(d) ? d : []; } catch { return []; } }
     function saveLog(log) { localStorage.setItem('workout_log', JSON.stringify(log)); }
     
@@ -461,20 +518,11 @@
       try { 
         const d = JSON.parse(localStorage.getItem('supplements_config')); 
         return (Array.isArray(d) && d.length > 0) ? d : DEFAULT_SUPPS; 
-      } catch { 
-        return DEFAULT_SUPPS; 
-      } 
+      } catch { return DEFAULT_SUPPS; } 
     }
     function saveSuppConfig(c) { localStorage.setItem('supplements_config', JSON.stringify(c)); }
     
-    function getSuppLog() { 
-      try { 
-        const d = JSON.parse(localStorage.getItem('supplements_log')); 
-        return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}; 
-      } catch { 
-        return {}; 
-      } 
-    }
+    function getSuppLog() { try { const d = JSON.parse(localStorage.getItem('supplements_log')); return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}; } catch { return {}; } }
     function saveSuppLog(l) { localStorage.setItem('supplements_log', JSON.stringify(l)); }
 
     function getSavedMeals() { try { const d = JSON.parse(localStorage.getItem('saved_meals')); return Array.isArray(d) ? d : []; } catch { return []; } }
@@ -484,7 +532,16 @@
     function formatDate(d) { return getBioDate(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
     function getWeekStart() { const d = getBioDate(); d.setHours(0,0,0,0); const day = d.getDay(); const diff = day === 0 ? 6 : day - 1; d.setDate(d.getDate() - diff); return d; }
     
-    function getPrevSession(dayKey, exerciseName) { const log = getLog(); const sessions = [...log].filter(s => s.dayKey === dayKey).sort((a,b) => new Date(b.date) - new Date(a.date)); for (const s of sessions) { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight || st.reps)) return ex; } return null; }
+    // Scans FULL history for the exercise, not just the specific dayKey
+    function getPrevExercise(exerciseName) { 
+        const log = getLog().sort((a,b) => new Date(b.date) - new Date(a.date)); 
+        for (const s of log) { 
+            const ex = s.exercises.find(e => e.name === exerciseName); 
+            if (ex && ex.sets.some(st => st.weight || st.reps)) return ex; 
+        } 
+        return null; 
+    }
+
     function getAllSessionsForExercise(exerciseName) { const log = getLog(); const results = []; [...log].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight && st.reps && !st.isWarmup)) { results.push({ date: s.date, sets: ex.sets.filter(st => !st.isWarmup) }); } }); return results; }
     function getRestTime(exName) { const ex = getAllExercises().find(e => e.name === exName); if (ex && ex.isCore) return 60; if (COMPOUND_EXERCISES.includes(exName)) return 180; return 90; }
     function getAllExercises() { const all = []; const seen = new Set(); for (const dk of Object.keys(PROGRAM)) { for (const ex of PROGRAM[dk].exercises) { if (!seen.has(ex.name)) { all.push(ex); seen.add(ex.name); } } } return all; }
@@ -536,6 +593,18 @@
       const banner = document.getElementById('resume-banner');
       if (activeSession) banner.classList.remove('hidden'); else banner.classList.add('hidden');
 
+      // Block Config Update
+      const bCfg = getBlockConfig();
+      const bText = document.getElementById('block-week-text');
+      const dLoad = document.getElementById('deload-indicator');
+      if (bCfg.startDate) {
+          const sDate = new Date(bCfg.startDate); const now = getBioDate();
+          const dDiff = Math.floor((now - sDate) / (1000 * 60 * 60 * 24));
+          const wNum = Math.max(1, Math.floor(dDiff / 7) + 1);
+          bText.textContent = `Week ${wNum} of ${bCfg.totalWeeks}`;
+      } else { bText.textContent = "Off-Season / Unset"; }
+      if (bCfg.isDeload) dLoad.classList.remove('hidden'); else dLoad.classList.add('hidden');
+
       const log = getLog(); 
       const weekStart = getWeekStart(); 
       const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
@@ -548,7 +617,8 @@
       const todayCard = document.getElementById('today-card-e5f6');
       if (PROGRAM[dk] && !hasCompletedToday) {
         const day = PROGRAM[dk];
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary">START WORKOUT →</button>`;
+        const estSets = day.exercises.reduce((acc, ex) => acc + (bCfg.isDeload ? Math.round(ex.targetSets * 0.6) : ex.targetSets), 0);
+        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-[10px] font-bold px-2 py-1 rounded-md bg-[var(--elevated)] text-[#6b6b80]">~${Math.round(estSets * 3.5)} MIN</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary" style="background:linear-gradient(135deg,${day.color},${day.color}cc);">START ${day.label.toUpperCase()} →</button>`;
         document.getElementById('start-today-btn').addEventListener('click', () => { if (!activeSession) startWorkout(dk); switchView('log'); });
       } else {
         let nextDk = dk;
@@ -567,7 +637,14 @@
       document.getElementById('weekly-volume-stat').textContent = `${wVol.toLocaleString()} lbs lifted`;
 
       const container = document.getElementById('week-cal-g7h8');
-      container.innerHTML = WEEK_ORDER.map(k => `<div class="flex flex-col items-center gap-1"><button class="week-dot ${completedDays.has(k) ? 'completed' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled')} ${k === todayKey() ? 'today' : ''}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`).join('');
+      container.innerHTML = WEEK_ORDER.map(k => {
+         const isComp = completedDays.has(k);
+         const dColor = isComp ? (PROGRAM[k] ? PROGRAM[k].color : 'var(--teal)') : 'transparent';
+         const bgClass = isComp ? '' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled');
+         const style = isComp ? `background-color: ${dColor}; color: #000; border-color: ${dColor};` : '';
+         return `<div class="flex flex-col items-center gap-1"><button class="week-dot ${bgClass} ${k === todayKey() ? 'today' : ''}" style="${style}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`;
+      }).join('');
+      
       container.querySelectorAll('.week-dot').forEach(dot => dot.addEventListener('click', () => { if (PROGRAM[dot.dataset.daykey]) { if(!activeSession) startWorkout(dot.dataset.daykey); switchView('log'); } }));
 
       const lastCard = document.getElementById('last-session-i9j0');
@@ -579,15 +656,22 @@
 
     function startWorkout(dayKey) {
       const day = PROGRAM[dayKey]; if (!day) return;
+      const bCfg = getBlockConfig();
+      
       activeSession = {
         dayKey, startTime: Date.now(),
-        exercises: day.exercises.map(ex => ({
-          name: ex.name, targetSets: ex.targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
-          sets: Array.from({ length: ex.targetSets }, (_, i) => {
-            const p = getPrevSession(dayKey, ex.name);
-            return { weight: p && p.sets[i] ? p.sets[i].weight||'' : '', reps: '', rir: p && p.sets[i] ? p.sets[i].rir||'' : '', done: false, isWarmup: false };
-          }), note: ''
-        }))
+        exercises: day.exercises.map(ex => {
+          // Deload cuts sets down mathematically (e.g. 4 -> 2, 3 -> 2)
+          const targetSets = bCfg.isDeload ? Math.round(ex.targetSets * 0.6) : ex.targetSets;
+          return {
+            name: ex.name, targetSets: targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
+            sets: Array.from({ length: targetSets }, (_, i) => {
+              const p = getPrevExercise(ex.name); // Supercharged scan of entire history
+              const pSet = p && p.sets[i] ? p.sets[i] : null;
+              return { weight: pSet ? pSet.weight||'' : '', reps: pSet ? pSet.reps||'' : '', rir: pSet ? pSet.rir||'' : '', done: false, isWarmup: false };
+            }), note: ''
+          };
+        })
       };
       saveActiveSession();
     }
@@ -630,20 +714,19 @@
       const container = document.getElementById('log-exercises-w3x4'); container.innerHTML = '';
 
       activeSession.exercises.forEach((exDef, ei) => {
-        const prev = getPrevSession(activeSession.dayKey, exDef.name);
+        const prev = getPrevExercise(exDef.name);
         const card = document.createElement('div'); card.className = 'card';
         if (exDef.isCore) { card.style.borderColor = 'rgba(108,99,255,0.3)'; card.style.background = 'rgba(108,99,255,0.05)'; }
 
         let prevHTML = prev ? `<div class="prev-data">Last: ${prev.sets.filter(s=>!s.isWarmup).map((s, i) => `S${i+1} ${s.weight||0}×${s.reps||0}${s.rir?' @'+s.rir:''}`).join(' ')}</div>` : `<div class="prev-data">— First time logging this exercise</div>`;
 
         let setsHTML = exDef.sets.map((sData, si) => {
-          const pSet = prev && prev.sets[si] ? prev.sets[si] : null;
           return `
             <div class="set-row ${sData.done ? 'completed' : ''} ${sData.isWarmup ? 'is-warmup' : ''}" id="set-${ei}-${si}">
               <button class="warmup-btn ${sData.isWarmup ? 'active' : ''}" data-ei="${ei}" data-si="${si}">W</button>
               <span class="set-label text-xs font-bold text-[#6b6b80] w-6 text-center">S${si+1}</span>
               <div class="flex-1 flex items-center gap-1">
-                <input type="number" inputmode="decimal" placeholder="${pSet ? pSet.weight||'0' : 'lbs'}" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
+                <input type="number" inputmode="decimal" placeholder="lbs" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
                 <span class="text-xs text-[#44445a] font-bold">×</span>
                 <div class="w-12"><input type="number" inputmode="numeric" placeholder="Reps" value="${sData.reps}" class="reps-input" data-ei="${ei}" data-si="${si}" /></div>
                 <span class="text-xs text-[#44445a] font-bold">@</span>
@@ -687,10 +770,22 @@
     }
 
     function toggleWarmup(ei, si) { const set = activeSession.exercises[ei].sets[si]; set.isWarmup = !set.isWarmup; saveActiveSession(); renderLogView(); }
+    
     function toggleSet(ei, si) {
       const set = activeSession.exercises[ei].sets[si]; set.done = !set.done;
-      if (set.done) { vibrate(); if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, set.weight); showRestTimer(getRestTime(activeSession.exercises[ei].name)); }
-      saveActiveSession(); renderLogView();
+      if (set.done) { 
+          vibrate(); 
+          if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, set.weight); 
+          showRestTimer(getRestTime(activeSession.exercises[ei].name)); 
+          
+          // Micro Pulse Animation
+          const rowEl = document.getElementById(`set-${ei}-${si}`);
+          rowEl.classList.remove('pulse-animate');
+          void rowEl.offsetWidth; // trigger reflow
+          rowEl.classList.add('pulse-animate');
+      }
+      saveActiveSession(); 
+      setTimeout(renderLogView, 100); // Slight delay so animation can start
     }
 
     function openSwapModal(ei) {
@@ -710,9 +805,15 @@
       document.getElementById('finish-btn-y5z6').disabled = !activeSession.exercises.some(ex => ex.sets.some(s => s.done));
     }
 
+    function updateLogTimerUI() {
+      if (!activeSession) return;
+      const el = Math.floor((Date.now() - activeSession.startTime) / 1000); 
+      document.getElementById('log-timer-o5p6').textContent = `${String(Math.floor(el / 60)).padStart(2, '0')}:${String(el % 60).padStart(2, '0')}`;
+    }
+
     function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => { if (!activeSession) return; const el = Math.floor((Date.now() - activeSession.startTime) / 1000); document.getElementById('log-timer-o5p6').textContent = `${String(Math.floor(el / 60)).padStart(2, '0')}:${String(el % 60).padStart(2, '0')}`; }, 1000);
+      timerInterval = setInterval(updateLogTimerUI, 1000);
     }
 
     // ===========================
@@ -967,9 +1068,30 @@
     // ===========================
     // FINISH & SAVE
     // ===========================
-    function showRestTimer(seconds) { if (restTimerInterval) clearInterval(restTimerInterval); lastRestTotal = seconds; restTimeLeft = seconds; document.getElementById('rest-overlay-g4h4').style.display = 'flex'; updateRestDisplay(); restTimerInterval = setInterval(() => { restTimeLeft--; if (restTimeLeft <= 0) { clearInterval(restTimerInterval); playBeep(); vibrate(); setTimeout(dismissRest, 500); } updateRestDisplay(); }, 1000); }
-    function updateRestDisplay() { document.getElementById('rest-time-txt-k6l6').textContent = `${Math.floor(restTimeLeft/60)}:${String(restTimeLeft%60).padStart(2,'0')}`; document.getElementById('rest-ring-i5j5').style.strokeDashoffset = 326.7 * (restTimeLeft/lastRestTotal); }
-    function dismissRest() { if (restTimerInterval) clearInterval(restTimerInterval); document.getElementById('rest-overlay-g4h4').style.display = 'none'; }
+    function showRestTimer(seconds) { 
+      if (restTimerInterval) clearInterval(restTimerInterval); 
+      lastRestTotal = seconds; 
+      restEndTime = Date.now() + (seconds * 1000); 
+      document.getElementById('rest-overlay-g4h4').style.display = 'flex'; 
+      updateRestDisplay(); 
+      restTimerInterval = setInterval(() => { 
+        let left = Math.ceil((restEndTime - Date.now()) / 1000);
+        if (left <= 0) { clearInterval(restTimerInterval); playBeep(); vibrate(); setTimeout(dismissRest, 500); } 
+        updateRestDisplay(); 
+      }, 1000); 
+    }
+    
+    function updateRestDisplay() { 
+      let left = Math.max(0, Math.ceil((restEndTime - Date.now()) / 1000));
+      document.getElementById('rest-time-txt-k6l6').textContent = `${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`; 
+      document.getElementById('rest-ring-i5j5').style.strokeDashoffset = 326.7 * (left/lastRestTotal); 
+    }
+    
+    function dismissRest() { 
+      if (restTimerInterval) clearInterval(restTimerInterval); 
+      restEndTime = 0;
+      document.getElementById('rest-overlay-g4h4').style.display = 'none'; 
+    }
 
     function showFinishModal() {
       if (!activeSession) return; let vol=0, comp=0, tot=0;
@@ -985,6 +1107,20 @@
       document.getElementById('finish-modal-q9r9').style.display = 'none';
       if (timerInterval) clearInterval(timerInterval); activeSession = null; saveActiveSession(); releaseWakeLock(); spawnConfetti(); switchView('home');
     }
+
+    // Modal UI Listeners
+    document.getElementById('block-tracker-ui').addEventListener('click', () => {
+      const c = getBlockConfig();
+      document.getElementById('block-start-date').value = c.startDate || '';
+      document.getElementById('block-total-weeks').value = c.totalWeeks || 16;
+      document.getElementById('block-deload-toggle').checked = c.isDeload;
+      document.getElementById('block-modal').style.display = 'flex';
+    });
+    document.getElementById('block-cancel-btn').addEventListener('click', () => document.getElementById('block-modal').style.display = 'none');
+    document.getElementById('block-save-btn').addEventListener('click', () => {
+      saveBlockConfig({ startDate: document.getElementById('block-start-date').value, totalWeeks: parseInt(document.getElementById('block-total-weeks').value) || 16, isDeload: document.getElementById('block-deload-toggle').checked });
+      document.getElementById('block-modal').style.display = 'none'; renderHome();
+    });
 
     document.getElementById('log-cancel-btn-q7r8').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'flex');
     document.getElementById('cancel-workout-no').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'none');
@@ -1060,7 +1196,7 @@
     // ===========================
     document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
     document.getElementById('rest-skip-o8p8').addEventListener('click', dismissRest);
-    document.getElementById('rest-add30-m7n7').addEventListener('click', () => { restTimeLeft += 30; lastRestTotal += 30; });
+    document.getElementById('rest-add30-m7n7').addEventListener('click', () => { restEndTime += 30000; lastRestTotal += 30; updateRestDisplay(); });
     document.getElementById('rest-overlay-g4h4').addEventListener('click', e => { if (e.target === e.currentTarget) dismissRest(); });
     document.getElementById('finish-btn-y5z6').addEventListener('click', showFinishModal);
     document.getElementById('finish-cancel-u1v1').addEventListener('click', () => document.getElementById('finish-modal-q9r9').style.display = 'none');
@@ -1069,6 +1205,15 @@
     // ===========================
     // INIT
     // ===========================
+    
+    // Aggressive re-sync when app comes back from background
+    document.addEventListener('visibilitychange', async () => { 
+      if (document.visibilityState === 'visible') {
+        if (currentView === 'log' && activeSession) { await requestWakeLock(); updateLogTimerUI(); }
+        if (restEndTime > Date.now()) updateRestDisplay();
+      }
+    });
+    
     loadActiveSession();
     renderHome();
   </script>
@@ -1077,19 +1222,11 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(reg => {
-          // Force standard check for sw.js byte changes on load
-          reg.update();
-        });
+        navigator.serviceWorker.register('./sw.js').then(reg => { reg.update(); });
       });
-
-      // Automated layout hot-swap listener
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload(); // Hard refresh the shell cleanly without wiping local database
-        }
+        if (!refreshing) { refreshing = true; window.location.reload(); }
       });
     }
   </script>
