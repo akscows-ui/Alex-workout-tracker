@@ -39,14 +39,14 @@
     html, body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden; touch-action: manipulation; }
     body { padding-bottom: 80px; min-height: 100vh; min-height: 100dvh; }
 
-    input[type="number"], input[type="text"], input[type="date"] {
+    input[type="number"], input[type="text"] {
       background: var(--elevated); border: 1.5px solid var(--border); border-radius: 8px;
       color: #fff; font-size: 15px; font-weight: 600; text-align: center; padding: 8px 4px;
       width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -moz-appearance: textfield;
     }
-    input[type="text"].left-align, input[type="date"].left-align { text-align: left; padding-left: 12px; }
+    input[type="text"].left-align { text-align: left; padding-left: 12px; }
     input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type="number"]:focus, input[type="text"]:focus, input[type="date"]:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
+    input[type="number"]:focus, input[type="text"]:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(108,99,255,0.2); }
 
     .view { display: none; animation: fadeIn 0.25s ease; }
     .view.active { display: block; }
@@ -54,7 +54,6 @@
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     @keyframes confettiFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(105vh) rotate(720deg); opacity: 0; } }
     @keyframes prBanner { 0% { transform: scale(0.5) translateY(-20px); opacity: 0; } 50% { transform: scale(1.1) translateY(0); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-    @keyframes pulseGreen { 0% { background-color: rgba(0, 212, 170, 0.35); } 100% { background-color: transparent; } }
 
     .gradient-text { background: linear-gradient(135deg, var(--purple), var(--teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; transition: transform 0.15s ease; }
@@ -79,11 +78,10 @@
     .ring-progress { stroke: var(--teal); transition: stroke-dashoffset 0.5s linear; stroke-linecap: round; }
     .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #fff; }
 
-    .set-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; transition: opacity 0.2s; border-radius: 8px; margin: 2px -4px; padding-left: 4px; padding-right: 4px; }
+    .set-row { display: flex; align-items: center; gap: 6px; padding: 8px 0; transition: opacity 0.2s; }
     .set-row.completed:not(.is-warmup) { opacity: 0.6; }
     .set-row.completed.is-warmup { opacity: 0.4; }
     .set-row.completed .set-label { text-decoration: line-through; }
-    .set-row.pulse-animate { animation: pulseGreen 0.6s ease-out forwards; }
     .set-check { width: 36px; height: 36px; border-radius: 10px; border: 2px solid var(--border); background: var(--elevated); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; color: transparent; font-size: 16px; }
     .set-check.checked { background: var(--teal); border-color: var(--teal); color: #fff; }
     
@@ -101,11 +99,12 @@
 
     .prev-data { font-size: 12px; color: var(--text-muted); padding: 6px 12px; background: rgba(108,99,255,0.06); border-radius: 8px; margin-bottom: 8px; line-height: 1.6; }
 
-    .week-dot { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+    .week-dot { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; border: 2px solid transparent; }
     .week-dot:active { transform: scale(0.9); }
+    .week-dot.completed { background: var(--teal); color: #000; }
     .week-dot.scheduled { border-color: var(--purple); color: var(--purple); }
     .week-dot.rest { background: var(--elevated); color: var(--text-dim); }
-    .week-dot.today { box-shadow: 0 0 0 4px rgba(108,99,255,0.25); }
+    .week-dot.today { box-shadow: 0 0 0 3px rgba(108,99,255,0.35); }
 
     .confetti-piece { position: fixed; top: -10px; z-index: 400; width: 8px; height: 8px; border-radius: 2px; animation: confettiFall linear forwards; pointer-events: none; }
     .pr-banner { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 250; background: linear-gradient(135deg, var(--gold), #ffaa00); color: #000; font-weight: 800; font-size: 16px; padding: 12px 28px; border-radius: 14px; animation: prBanner 0.4s ease forwards; box-shadow: 0 4px 24px rgba(255,214,10,0.4); }
@@ -123,13 +122,6 @@
 
     textarea { background: var(--elevated); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; padding: 10px 12px; width: 100%; resize: none; outline: none; font-family: inherit; }
     textarea:focus { border-color: var(--purple); }
-    
-    /* Hide default checkbox UI */
-    .toggle-checkbox { appearance: none; width: 44px; height: 24px; background: var(--elevated); border-radius: 12px; position: relative; cursor: pointer; outline: none; border: 1px solid var(--border); transition: 0.3s; }
-    .toggle-checkbox::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: var(--text-muted); border-radius: 50%; transition: 0.3s; }
-    .toggle-checkbox:checked { background: var(--gold); border-color: var(--gold); }
-    .toggle-checkbox:checked::after { background: #000; transform: translateX(20px); }
-
     select { background: var(--elevated); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; padding: 12px 16px; width: 100%; outline: none; font-family: inherit; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b6b80' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
     select:focus { border-color: var(--purple); }
 
@@ -150,27 +142,12 @@
 </head>
 <body>
 
-  <!-- ==================== HOME VIEW ==================== -->
   <div id="view-home" class="view active px-5 pt-6 pb-4">
-    <header class="mb-6 flex justify-between items-start">
-      <div>
-        <h1 class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-[var(--purple)] to-[var(--teal)] tracking-tight" style="line-height: 1.1;">ALEX TRACKER</h1>
-        <p id="date-today-c3d4" class="text-sm text-[#6b6b80] mt-1 font-medium"></p>
-      </div>
+    <header class="mb-6">
+      <h1 class="text-2xl font-black gradient-text tracking-tight">ALEX TRACKER</h1>
+      <p id="date-today-c3d4" class="text-sm text-[#6b6b80] mt-1 font-medium"></p>
     </header>
     
-    <!-- Training Block Module -->
-    <div class="flex justify-between items-center mb-6 cursor-pointer bg-[var(--elevated)] p-4 rounded-2xl border border-[var(--border)]" id="block-tracker-ui">
-      <div>
-          <p class="text-[10px] font-bold text-[var(--purple)] uppercase tracking-widest mb-1">Training Block</p>
-          <h2 class="text-lg font-black" id="block-week-text">Off-Season</h2>
-      </div>
-      <div class="text-right flex items-center gap-3">
-          <span id="deload-indicator" class="hidden text-xs bg-[rgba(255,214,10,0.15)] text-[var(--gold)] px-2 py-1 rounded-md font-bold">⚠️ DELOAD</span>
-          <span class="text-xl opacity-60">⚙️</span>
-      </div>
-    </div>
-
     <div id="resume-banner" class="mb-4 hidden cursor-pointer" onclick="switchView('log')">
       <div class="card border-[var(--teal)] bg-[rgba(0,212,170,0.05)] py-4 flex items-center justify-between">
         <div>
@@ -193,7 +170,6 @@
     <section id="last-session-i9j0" class="card mb-4" style="display:none;"></section>
   </div>
 
-  <!-- ==================== LOG VIEW ==================== -->
   <div id="view-log" class="view px-5 pt-4 pb-4">
     <div id="log-sticky-k1l2" class="sticky top-0 z-50 pb-3 pt-2 transition-colors duration-300" style="background:var(--bg);">
       <div class="flex items-center justify-between mb-2">
@@ -210,11 +186,10 @@
     </div>
     <div id="log-exercises-w3x4" class="space-y-4 mt-2"></div>
     <div class="mt-6 mb-4">
-      <button id="finish-btn-y5z6" class="btn-primary" disabled style="display:none;">FINISH WORKOUT</button>
+      <button id="finish-btn-y5z6" class="btn-primary" disabled>FINISH WORKOUT</button>
     </div>
   </div>
 
-  <!-- ==================== DIET VIEW ==================== -->
   <div id="view-diet" class="view px-5 pt-6 pb-4">
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-2xl font-black gradient-text">Nutrition</h1>
@@ -242,7 +217,6 @@
       </div>
     </div>
 
-    <!-- Supplement Tracker -->
     <div class="flex items-center justify-between mb-3 mt-8">
       <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest">Daily Supplements</h2>
       <button id="supp-edit-btn" class="text-[10px] font-bold text-[#6b6b80] underline">Edit Stack</button>
@@ -251,12 +225,9 @@
 
     <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Quick Add Meal</h2>
     <div class="card mb-6 space-y-3">
-      <div class="flex gap-3">
-        <div class="autocomplete-wrapper" style="width: 75%;">
-          <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
-          <div id="autocomplete-list" class="autocomplete-list"></div>
-        </div>
-        <input type="number" id="diet-input-qty" value="1" min="0.1" step="0.1" class="text-center" style="width: 25%;" placeholder="Qty" />
+      <div class="autocomplete-wrapper">
+        <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
+        <div id="autocomplete-list" class="autocomplete-list"></div>
       </div>
       <div class="flex gap-3">
         <input type="number" id="diet-input-cal" placeholder="Calories" class="w-1/2" />
@@ -278,7 +249,6 @@
     <button id="diet-export-btn" class="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Diet Data (CSV)</button>
   </div>
 
-  <!-- ==================== HISTORY VIEW ==================== -->
   <div id="view-history" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">History</h1>
     <div id="history-list-a1b1" class="space-y-3 mb-8"></div>
@@ -294,39 +264,10 @@
     </div>
   </div>
 
-  <!-- ==================== PROGRESS VIEW ==================== -->
   <div id="view-progress" class="view px-5 pt-6 pb-4">
     <h1 class="text-2xl font-black gradient-text mb-5">Progress</h1>
     <div class="mb-4"><select id="progress-select-c2d2"></select></div>
     <div id="progress-content-e3f3"><p class="text-sm text-[#6b6b80]">Select an exercise to view progress</p></div>
-  </div>
-
-  <!-- ==================== MODALS & OVERLAYS ==================== -->
-  <div id="block-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-      <h3 class="text-lg font-black mb-4">Training Block Settings</h3>
-      <div class="space-y-4 mb-6">
-        <div>
-          <label class="text-xs font-bold text-[#6b6b80] uppercase block mb-1">Block Start Date</label>
-          <input type="date" id="block-start-date" class="left-align text-sm" />
-        </div>
-        <div>
-          <label class="text-xs font-bold text-[#6b6b80] uppercase block mb-1">Total Weeks</label>
-          <input type="number" id="block-total-weeks" placeholder="e.g., 16" value="16" />
-        </div>
-        <div class="flex items-center justify-between p-4 bg-[var(--elevated)] rounded-xl border border-[var(--border)]">
-          <div>
-            <p class="text-sm font-bold text-[var(--gold)]">Deload Mode</p>
-            <p class="text-[10px] text-[#6b6b80] mt-1">Cuts all target sets by 40%</p>
-          </div>
-          <input type="checkbox" id="block-deload-toggle" class="toggle-checkbox" />
-        </div>
-      </div>
-      <div class="flex gap-3">
-        <button id="block-cancel-btn" class="flex-1 text-sm font-bold text-[#6b6b80] bg-[var(--elevated)] py-3 rounded-xl">Cancel</button>
-        <button id="block-save-btn" class="flex-1 text-sm font-bold text-white bg-[var(--purple)] py-3 rounded-xl">Save</button>
-      </div>
-    </div>
   </div>
 
   <div id="rest-overlay-g4h4" class="rest-overlay" style="display:none;">
@@ -438,31 +379,79 @@
     let wakeLock = null;
     async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
     function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
-
-    // Biological Day Logic: Offset mathematically by exactly 4 hours (14,400,000 ms)
-    const getBioDate = (dateVal) => {
-      const d = dateVal ? new Date(dateVal) : new Date();
-      return new Date(d.getTime() - 14400000);
-    };
+    document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
     const ALTERNATIVES = {
-      'Pec Deck': ['Cable Crossovers', 'Machine Flyes', 'Flat DB Flyes'],
-      'T-Bar Row Machine': ['Seated Cable Row', 'Chest-Supported DB Row', 'Barbell Row'],
-      'Incline DB Press': ['Incline Barbell Press', 'Incline Machine Press'],
+      'Pec Deck': ['Cable Crossovers', 'Machine Flyes', 'Flat DB Flyes', 'Supine Press'],
+      'Incline Machine Press': ['Supine Press', 'Flat Barbell Press', 'Machine Chest Press', 'Incline DB Press'],
+      'T-Bar Row Machine': ['Machine Pin-Loaded Row', 'Seated Cable Row', 'Chest-Supported DB Row', 'Barbell Row'],
+      'Machine Pin-Loaded Row': ['T-Bar Row Machine', 'Seated Cable Row', 'Lat Pulldown'],
       'Lat Pulldown': ['Pull-ups', 'Assisted Pull-ups', 'Straight Arm Pulldown'],
-      'Hack Squat': ['Barbell Squat', 'Goblet Squat', 'Leg Press'],
+      'Leg Press': ['Barbell Squat', 'Goblet Squat', 'Leg Extension'],
       'Romanian Deadlift': ['Stiff-Leg Deadlift', 'Lying Leg Curl', 'Good Mornings'],
       'Weighted Pull-ups': ['Lat Pulldown', 'Assisted Pull-ups'],
-      'Machine Shoulder Press': ['DB Shoulder Press', 'Barbell OHP'],
-      'Facepulls': ['Rear Delt Fly', 'Band Pull-Aparts']
+      'Plate-Loaded Shoulder Press': ['DB Shoulder Press', 'Barbell OHP', 'Machine Shoulder Press']
     };
 
     const PROGRAM = {
-      mon: { label: 'Upper', color: '#6c63ff', exercises: [ { name: 'Pec Deck', targetSets: 4, targetReps: '10–12', isCore: false }, { name: 'T-Bar Row Machine', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Incline DB Press', targetSets: 3, targetReps: '8–10', isCore: false }, { name: 'Lat Pulldown', targetSets: 3, targetReps: '10–12', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Tricep Pushdowns', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Hanging Leg Raise', targetSets: 3, targetReps: '12', isCore: true }, { name: 'Decline Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
-      wed: { label: 'Pull', color: '#00d4aa', exercises: [ { name: 'Weighted Pull-ups', targetSets: 4, targetReps: '6–10', isCore: false }, { name: 'Cable Row', targetSets: 4, targetReps: '10–12', isCore: false }, { name: 'Rear Delt Fly', targetSets: 3, targetReps: '15–20', isCore: false }, { name: 'Hammer Curls', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Facepulls', targetSets: 2, targetReps: '15–20', isCore: false } ] },
-      thu: { label: 'Legs – Quad', color: '#ffd60a', exercises: [ { name: 'Hack Squat', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Leg Press', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Leg Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Standing Calf Raise', targetSets: 4, targetReps: '15–20', isCore: false } ] },
-      fri: { label: 'Push', color: '#ff9f1c', exercises: [ { name: 'Machine Shoulder Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Smith / DB Incline Press', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Pec Deck', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Lateral Raises', targetSets: 4, targetReps: '15–20', isCore: false }, { name: 'Overhead Tricep Extension', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } ] },
-      sun: { label: 'Lower – Posterior', color: '#a29bfe', exercises: [ { name: 'Romanian Deadlift', targetSets: 4, targetReps: '8–10', isCore: false }, { name: 'Walking Lunges', targetSets: 3, targetReps: '12 each', isCore: false }, { name: 'Leg Curl', targetSets: 3, targetReps: '12–15', isCore: false }, { name: 'Good Mornings', targetSets: 3, targetReps: '12', isCore: false }, { name: 'Seated Calf Raise', targetSets: 3, targetReps: '15–20', isCore: false } ] }
+      mon: { 
+        label: 'Upper', 
+        color: '#6c63ff', 
+        exercises: [ 
+          { name: 'Incline Machine Press', targetSets: 3, targetReps: '8–10', isCore: false }, 
+          { name: 'Lat Pulldown', targetSets: 3, targetReps: '10–12', isCore: false }, 
+          { name: 'T-Bar Row Machine', targetSets: 3, targetReps: '8–10', isCore: false }, 
+          { name: 'Pec Deck', targetSets: 3, targetReps: '10–12', isCore: false }, 
+          { name: 'Tricep Pushdowns', targetSets: 3, targetReps: '12–15', isCore: false }, 
+          { name: 'Lateral Raises', targetSets: 2, targetReps: '15–20', isCore: false }, 
+          { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, 
+          { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } 
+        ] 
+      },
+      wed: { 
+        label: 'Pull', 
+        color: '#00d4aa', 
+        exercises: [ 
+          { name: 'Weighted Pull-ups', targetSets: 3, targetReps: '6–10', isCore: false }, 
+          { name: 'Machine Pin-Loaded Row', targetSets: 3, targetReps: '10–12', isCore: false }, 
+          { name: 'Rear Delt Fly', targetSets: 3, targetReps: '15–20', isCore: false }, 
+          { name: 'Cable Curls', targetSets: 3, targetReps: '12', isCore: false } 
+        ] 
+      },
+      thu: { 
+        label: 'Legs – Quad', 
+        color: '#ffd60a', 
+        exercises: [ 
+          { name: 'Leg Press', targetSets: 3, targetReps: '12–15', isCore: false }, 
+          { name: 'Leg Extension', targetSets: 2, targetReps: '12–15', isCore: false }, 
+          { name: 'Leg Curl', targetSets: 2, targetReps: '12–15', isCore: false }, 
+          { name: 'Standing Calf Raise', targetSets: 2, targetReps: '15–20', isCore: false } 
+        ] 
+      },
+      fri: { 
+        label: 'Push', 
+        color: '#ff9f1c', 
+        exercises: [ 
+          { name: 'Incline Machine Press', targetSets: 3, targetReps: '8–10', isCore: false }, 
+          { name: 'Pec Deck', targetSets: 3, targetReps: '12–15', isCore: false }, 
+          { name: 'Plate-Loaded Shoulder Press', targetSets: 3, targetReps: '8–10', isCore: false }, 
+          { name: 'Overhead Tricep Extension', targetSets: 3, targetReps: '12–15', isCore: false }, 
+          { name: 'Lateral Raises', targetSets: 2, targetReps: '15–20', isCore: false }, 
+          { name: 'Cable Crunches', targetSets: 3, targetReps: '15', isCore: true }, 
+          { name: 'Reverse Crunches', targetSets: 3, targetReps: '15', isCore: true } 
+        ] 
+      },
+      sun: { 
+        label: 'Lower – Posterior', 
+        color: '#a29bfe', 
+        exercises: [ 
+          { name: 'Romanian Deadlift', targetSets: 2, targetReps: '8–10', isCore: false }, 
+          { name: 'Walking Lunges', targetSets: 2, targetReps: '12 each', isCore: false }, 
+          { name: 'Leg Curl', targetSets: 2, targetReps: '12–15', isCore: false }, 
+          { name: 'Good Mornings', targetSets: 2, targetReps: '12', isCore: false }, 
+          { name: 'Seated Calf Raise', targetSets: 2, targetReps: '15–20', isCore: false } 
+        ] 
+      }
     };
 
     const DEFAULT_SUPPS = [
@@ -485,63 +474,35 @@
     const DAY_LABELS = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
     const WEEK_ORDER = ['mon','tue','wed','thu','fri','sat','sun'];
     const REST_DAYS = ['tue','sat'];
-    const COMPOUND_EXERCISES = ['Weighted Pull-ups','Hack Squat','Leg Press','Romanian Deadlift','Incline DB Press','Smith / DB Incline Press','Machine Shoulder Press','T-Bar Row Machine','Walking Lunges','Good Mornings'];
+    const COMPOUND_EXERCISES = ['Weighted Pull-ups','Leg Press','Romanian Deadlift','Incline Machine Press','Plate-Loaded Shoulder Press','T-Bar Row Machine','Machine Pin-Loaded Row','Walking Lunges','Good Mornings'];
 
-    // Core Audit Patch: Strict macro targets
-    const DEFAULT_TARGETS = { training: { cal: 3640, p: 210, c: 482, f: 97 }, rest: { cal: 3125, p: 200, c: 390, f: 85 } };
+    const DEFAULT_TARGETS = { training: { cal: 3675, p: 250, c: 460, f: 80 }, rest: { cal: 3200, p: 230, c: 350, f: 75 } };
     function getTargets() { try { return JSON.parse(localStorage.getItem('diet_targets')) || DEFAULT_TARGETS; } catch { return DEFAULT_TARGETS; } }
 
     let currentView = 'home';
     let activeSession = null; 
-    let timerInterval = null; 
-    let restTimerInterval = null; let restEndTime = 0; let lastRestTotal = 90; 
+    let timerInterval = null; let restTimerInterval = null; let lastRestTotal = 90; let restTimeLeft = 0;
     let deleteTargetId = null; let deleteTargetType = null; let activeSwapEi = null; let travelModeActive = false;
 
-    // Block Config Logic
-    function getBlockConfig() { 
-        try { return JSON.parse(localStorage.getItem('block_config')) || { startDate: '', totalWeeks: 16, isDeload: false }; } 
-        catch { return { startDate: '', totalWeeks: 16, isDeload: false }; } 
-    }
-    function saveBlockConfig(c) { localStorage.setItem('block_config', JSON.stringify(c)); }
-
-    // Defensively parse LocalStorage data
-    function getLog() { try { const d = JSON.parse(localStorage.getItem('workout_log')); return Array.isArray(d) ? d : []; } catch { return []; } }
+    function getLog() { try { return JSON.parse(localStorage.getItem('workout_log')) || []; } catch { return []; } }
     function saveLog(log) { localStorage.setItem('workout_log', JSON.stringify(log)); }
-    
-    function getDietLog() { try { const d = JSON.parse(localStorage.getItem('diet_log')); return Array.isArray(d) ? d : []; } catch { return []; } }
+    function getDietLog() { try { return JSON.parse(localStorage.getItem('diet_log')) || []; } catch { return []; } }
     function saveDietLog(log) { localStorage.setItem('diet_log', JSON.stringify(log)); }
-    
     function saveActiveSession() { if (activeSession) localStorage.setItem('active_session', JSON.stringify(activeSession)); else localStorage.removeItem('active_session'); }
     function loadActiveSession() { try { const s = localStorage.getItem('active_session'); if (s) activeSession = JSON.parse(s); } catch {} }
 
-    function getSuppConfig() { 
-      try { 
-        const d = JSON.parse(localStorage.getItem('supplements_config')); 
-        return (Array.isArray(d) && d.length > 0) ? d : DEFAULT_SUPPS; 
-      } catch { return DEFAULT_SUPPS; } 
-    }
+    function getSuppConfig() { try { return JSON.parse(localStorage.getItem('supplements_config')) || DEFAULT_SUPPS; } catch { return DEFAULT_SUPPS; } }
     function saveSuppConfig(c) { localStorage.setItem('supplements_config', JSON.stringify(c)); }
-    
-    function getSuppLog() { try { const d = JSON.parse(localStorage.getItem('supplements_log')); return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}; } catch { return {}; } }
+    function getSuppLog() { try { return JSON.parse(localStorage.getItem('supplements_log')) || {}; } catch { return {}; } }
     function saveSuppLog(l) { localStorage.setItem('supplements_log', JSON.stringify(l)); }
 
-    function getSavedMeals() { try { const d = JSON.parse(localStorage.getItem('saved_meals')); return Array.isArray(d) ? d : []; } catch { return []; } }
+    function getSavedMeals() { try { return JSON.parse(localStorage.getItem('saved_meals')) || []; } catch { return []; } }
     function setSavedMeals(meals) { localStorage.setItem('saved_meals', JSON.stringify(meals)); }
 
-    function todayKey() { return DAY_MAP[getBioDate().getDay()]; }
-    function formatDate(d) { return getBioDate(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
-    function getWeekStart() { const d = getBioDate(); d.setHours(0,0,0,0); const day = d.getDay(); const diff = day === 0 ? 6 : day - 1; d.setDate(d.getDate() - diff); return d; }
-    
-    // Scans FULL history for the exercise, not just the specific dayKey
-    function getPrevExercise(exerciseName) { 
-        const log = getLog().sort((a,b) => new Date(b.date) - new Date(a.date)); 
-        for (const s of log) { 
-            const ex = s.exercises.find(e => e.name === exerciseName); 
-            if (ex && ex.sets.some(st => st.weight || st.reps)) return ex; 
-        } 
-        return null; 
-    }
-
+    function todayKey() { return DAY_MAP[new Date().getDay()]; }
+    function formatDate(d) { return new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+    function getWeekStart() { const d = new Date(); d.setHours(0,0,0,0); const day = d.getDay(); const diff = day === 0 ? 6 : day - 1; d.setDate(d.getDate() - diff); return d; }
+    function getPrevSession(dayKey, exerciseName) { const log = getLog(); const sessions = [...log].filter(s => s.dayKey === dayKey).sort((a,b) => new Date(b.date) - new Date(a.date)); for (const s of sessions) { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight || st.reps)) return ex; } return null; }
     function getAllSessionsForExercise(exerciseName) { const log = getLog(); const results = []; [...log].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight && st.reps && !st.isWarmup)) { results.push({ date: s.date, sets: ex.sets.filter(st => !st.isWarmup) }); } }); return results; }
     function getRestTime(exName) { const ex = getAllExercises().find(e => e.name === exName); if (ex && ex.isCore) return 60; if (COMPOUND_EXERCISES.includes(exName)) return 180; return 90; }
     function getAllExercises() { const all = []; const seen = new Set(); for (const dk of Object.keys(PROGRAM)) { for (const ex of PROGRAM[dk].exercises) { if (!seen.has(ex.name)) { all.push(ex); seen.add(ex.name); } } } return all; }
@@ -555,12 +516,16 @@
       let maxWeight = 0;
       for (const s of sessions) { for (const st of s.sets) { if (st.weight > maxWeight) maxWeight = st.weight; } }
       if (weight > maxWeight && weight > 0) {
-        const el = document.createElement('div'); el.className = 'pr-banner'; el.textContent = `🏆 NEW PR! ${exerciseName}: ${weight} lbs`; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); return true;
+        const el = document.createElement('div'); el.className = 'pr-banner'; el.textContent = `🏆 NEW PR! ${exerciseName}:${weight} lbs`; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); return true;
       }
       return false;
     }
 
     function switchView(name) {
+      if (name === 'log' && !activeSession) {
+        const dk = todayKey();
+        if (PROGRAM[dk]) startWorkout(dk); else { const nextDk = findNextWorkoutDay(); if (nextDk) startWorkout(nextDk); }
+      }
       currentView = name;
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-' + name)?.classList.add('active');
@@ -570,81 +535,38 @@
       if (name === 'diet') renderDiet();
       if (name === 'history') renderHistory();
       if (name === 'progress') renderProgress();
-      if (name === 'log') { 
-        if (activeSession) { requestWakeLock(); startTimer(); } 
-        else { releaseWakeLock(); if (timerInterval) clearInterval(timerInterval); document.getElementById('log-timer-o5p6').textContent = '00:00'; }
-        renderLogView(); 
-      }
+      if (name === 'log' && activeSession) { requestWakeLock(); startTimer(); renderLogView(); } else { releaseWakeLock(); }
     }
 
-    function findNextWorkoutDay() { 
-      const keys = ['mon','tue','wed','thu','fri','sat','sun']; 
-      for (let i = 1; i <= 7; i++) { 
-        const k = keys[(keys.indexOf(todayKey()) + i) % 7]; 
-        if (PROGRAM[k]) return k; 
-      } 
-      return 'mon'; 
-    }
+    function findNextWorkoutDay() { const keys = ['mon','tue','wed','thu','fri','sat','sun']; for (let i = 1; i <= 7; i++) { const k = keys[(keys.indexOf(todayKey()) + i) % 7]; if (PROGRAM[k]) return k; } return 'mon'; }
 
     function renderHome() {
       const dk = todayKey();
-      document.getElementById('date-today-c3d4').textContent = getBioDate().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      document.getElementById('date-today-c3d4').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
       
       const banner = document.getElementById('resume-banner');
       if (activeSession) banner.classList.remove('hidden'); else banner.classList.add('hidden');
 
-      // Block Config Update
-      const bCfg = getBlockConfig();
-      const bText = document.getElementById('block-week-text');
-      const dLoad = document.getElementById('deload-indicator');
-      if (bCfg.startDate) {
-          const sDate = new Date(bCfg.startDate); const now = getBioDate();
-          const dDiff = Math.floor((now - sDate) / (1000 * 60 * 60 * 24));
-          const wNum = Math.max(1, Math.floor(dDiff / 7) + 1);
-          bText.textContent = `Week ${wNum} of ${bCfg.totalWeeks}`;
-      } else { bText.textContent = "Off-Season / Unset"; }
-      if (bCfg.isDeload) dLoad.classList.remove('hidden'); else dLoad.classList.add('hidden');
-
-      const log = getLog(); 
-      const weekStart = getWeekStart(); 
-      const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
-      const weekLogs = log.filter(s => { const sd = getBioDate(s.date); return sd >= weekStart && sd < weekEnd; });
-      const completedDays = new Set(weekLogs.map(s => s.dayKey));
-
-      const todayStr = getBioDate().toDateString();
-      const hasCompletedToday = weekLogs.some(s => s.dayKey === dk && getBioDate(s.date).toDateString() === todayStr);
-
       const todayCard = document.getElementById('today-card-e5f6');
-      if (PROGRAM[dk] && !hasCompletedToday) {
+      if (PROGRAM[dk]) {
         const day = PROGRAM[dk];
-        const estSets = day.exercises.reduce((acc, ex) => acc + (bCfg.isDeload ? Math.round(ex.targetSets * 0.6) : ex.targetSets), 0);
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-[10px] font-bold px-2 py-1 rounded-md bg-[var(--elevated)] text-[#6b6b80]">~${Math.round(estSets * 3.5)} MIN</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary" style="background:linear-gradient(135deg,${day.color},${day.color}cc);">START ${day.label.toUpperCase()} →</button>`;
-        document.getElementById('start-today-btn').addEventListener('click', () => { if (!activeSession) startWorkout(dk); switchView('log'); });
+        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary">START WORKOUT →</button>`;
+        document.getElementById('start-today-btn').addEventListener('click', () => { switchView('log'); });
       } else {
-        let nextDk = dk;
-        for (let i = 1; i <= 7; i++) { const k = DAY_MAP[(DAY_MAP.indexOf(dk) + i) % 7]; if (PROGRAM[k]) { nextDk = k; break; } }
-        const nextDay = PROGRAM[nextDk];
-        const isRestDay = !PROGRAM[dk];
-        
-        const headerText = isRestDay ? "Rest Day" : "Workout Complete";
-        const subText = isRestDay ? "🥩 Hit your rest day macro targets" : "🎉 Awesome job crushing it today.";
-        
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">${headerText}</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">${subText}</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
-        document.getElementById('start-next-btn').addEventListener('click', () => { if (!activeSession) startWorkout(nextDk); switchView('log'); });
+        const nextDk = findNextWorkoutDay(); const nextDay = PROGRAM[nextDk];
+        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Rest Day</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">🥩 Hit your rest day macro targets</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
+        document.getElementById('start-next-btn').addEventListener('click', () => { switchView('log'); });
       }
+
+      const container = document.getElementById('week-cal-g7h8');
+      const log = getLog(); const weekStart = getWeekStart(); const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+      const weekLogs = log.filter(s => new Date(s.date) >= weekStart && new Date(s.date) < weekEnd);
+      const completedDays = new Set(weekLogs.map(s => s.dayKey));
 
       let wVol = 0; weekLogs.forEach(s => wVol += totalVolume(s));
       document.getElementById('weekly-volume-stat').textContent = `${wVol.toLocaleString()} lbs lifted`;
 
-      const container = document.getElementById('week-cal-g7h8');
-      container.innerHTML = WEEK_ORDER.map(k => {
-         const isComp = completedDays.has(k);
-         const dColor = isComp ? (PROGRAM[k] ? PROGRAM[k].color : 'var(--teal)') : 'transparent';
-         const bgClass = isComp ? '' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled');
-         const style = isComp ? `background-color: ${dColor}; color: #000; border-color: ${dColor};` : '';
-         return `<div class="flex flex-col items-center gap-1"><button class="week-dot ${bgClass} ${k === todayKey() ? 'today' : ''}" style="${style}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`;
-      }).join('');
-      
+      container.innerHTML = WEEK_ORDER.map(k => `<div class="flex flex-col items-center gap-1"><button class="week-dot ${completedDays.has(k) ? 'completed' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled')} ${k === todayKey() ? 'today' : ''}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`).join('');
       container.querySelectorAll('.week-dot').forEach(dot => dot.addEventListener('click', () => { if (PROGRAM[dot.dataset.daykey]) { if(!activeSession) startWorkout(dot.dataset.daykey); switchView('log'); } }));
 
       const lastCard = document.getElementById('last-session-i9j0');
@@ -656,77 +578,41 @@
 
     function startWorkout(dayKey) {
       const day = PROGRAM[dayKey]; if (!day) return;
-      const bCfg = getBlockConfig();
-      
       activeSession = {
         dayKey, startTime: Date.now(),
-        exercises: day.exercises.map(ex => {
-          // Deload cuts sets down mathematically (e.g. 4 -> 2, 3 -> 2)
-          const targetSets = bCfg.isDeload ? Math.round(ex.targetSets * 0.6) : ex.targetSets;
-          return {
-            name: ex.name, targetSets: targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
-            sets: Array.from({ length: targetSets }, (_, i) => {
-              const p = getPrevExercise(ex.name); // Supercharged scan of entire history
-              const pSet = p && p.sets[i] ? p.sets[i] : null;
-              return { weight: pSet ? pSet.weight||'' : '', reps: pSet ? pSet.reps||'' : '', rir: pSet ? pSet.rir||'' : '', done: false, isWarmup: false };
-            }), note: ''
-          };
-        })
+        exercises: day.exercises.map(ex => ({
+          name: ex.name, targetSets: ex.targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
+          sets: Array.from({ length: ex.targetSets }, (_, i) => {
+            const p = getPrevSession(dayKey, ex.name);
+            return { weight: p && p.sets[i] ? p.sets[i].weight||'' : '', reps: '', rir: p && p.sets[i] ? p.sets[i].rir||'' : '', done: false, isWarmup: false };
+          }), note: ''
+        }))
       };
       saveActiveSession();
     }
 
     function renderLogView() {
-      if (!activeSession) {
-        const dk = todayKey();
-        const todayStr = getBioDate().toDateString();
-        const hasCompletedToday = getLog().some(s => s.dayKey === dk && getBioDate(s.date).toDateString() === todayStr);
-
-        let targetDay = dk;
-        if (!PROGRAM[dk] || hasCompletedToday) targetDay = findNextWorkoutDay();
-        const dayInfo = PROGRAM[targetDay];
-
-        document.getElementById('log-day-label-m3n4').textContent = 'Ready to train?';
-        document.getElementById('log-day-label-m3n4').style.color = 'var(--text)';
-        document.getElementById('log-progress-txt-u1v2').textContent = 'No active session';
-        document.getElementById('log-progress-s9t0').style.width = '0%';
-        document.getElementById('finish-btn-y5z6').style.display = 'none';
-
-        const container = document.getElementById('log-exercises-w3x4');
-        container.innerHTML = `
-          <div class="card text-center py-10 mt-4 border-dashed border-2 border-[var(--border)] bg-transparent">
-            <p class="text-4xl mb-3">⚡</p>
-            <p class="text-sm text-[#6b6b80] mb-6">Up next: <strong style="color:${dayInfo.color}">${dayInfo.label}</strong></p>
-            <button id="log-start-empty-btn" class="btn-primary w-3/4 py-3 mx-auto" style="background:linear-gradient(135deg,${dayInfo.color},${dayInfo.color}cc);">START WORKOUT</button>
-          </div>
-        `;
-        document.getElementById('log-start-empty-btn').addEventListener('click', () => {
-           startWorkout(targetDay);
-           switchView('log');
-        });
-        return;
-      }
-
-      document.getElementById('finish-btn-y5z6').style.display = 'block';
+      if (!activeSession) return;
       const day = PROGRAM[activeSession.dayKey] || { label: 'Custom', color: '#6c63ff' };
       document.getElementById('log-day-label-m3n4').textContent = day.label; document.getElementById('log-day-label-m3n4').style.color = day.color;
       document.getElementById('log-progress-s9t0').style.background = day.color;
       const container = document.getElementById('log-exercises-w3x4'); container.innerHTML = '';
 
       activeSession.exercises.forEach((exDef, ei) => {
-        const prev = getPrevExercise(exDef.name);
+        const prev = getPrevSession(activeSession.dayKey, exDef.name);
         const card = document.createElement('div'); card.className = 'card';
         if (exDef.isCore) { card.style.borderColor = 'rgba(108,99,255,0.3)'; card.style.background = 'rgba(108,99,255,0.05)'; }
 
         let prevHTML = prev ? `<div class="prev-data">Last: ${prev.sets.filter(s=>!s.isWarmup).map((s, i) => `S${i+1} ${s.weight||0}×${s.reps||0}${s.rir?' @'+s.rir:''}`).join(' ')}</div>` : `<div class="prev-data">— First time logging this exercise</div>`;
 
         let setsHTML = exDef.sets.map((sData, si) => {
+          const pSet = prev && prev.sets[si] ? prev.sets[si] : null;
           return `
             <div class="set-row ${sData.done ? 'completed' : ''} ${sData.isWarmup ? 'is-warmup' : ''}" id="set-${ei}-${si}">
               <button class="warmup-btn ${sData.isWarmup ? 'active' : ''}" data-ei="${ei}" data-si="${si}">W</button>
               <span class="set-label text-xs font-bold text-[#6b6b80] w-6 text-center">S${si+1}</span>
               <div class="flex-1 flex items-center gap-1">
-                <input type="number" inputmode="decimal" placeholder="lbs" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
+                <input type="number" inputmode="decimal" placeholder="${pSet ? pSet.weight\vert{}\vert{}'0' : 'lbs'}" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
                 <span class="text-xs text-[#44445a] font-bold">×</span>
                 <div class="w-12"><input type="number" inputmode="numeric" placeholder="Reps" value="${sData.reps}" class="reps-input" data-ei="${ei}" data-si="${si}" /></div>
                 <span class="text-xs text-[#44445a] font-bold">@</span>
@@ -754,7 +640,13 @@
         container.appendChild(card);
       });
 
-      const bindInp = (c, k, pFunc) => container.querySelectorAll(c).forEach(i => i.addEventListener('input', e => { const val = pFunc(e.target.value); activeSession.exercises[parseInt(e.target.dataset.ei)].sets[parseInt(e.target.dataset.si)][k] = isNaN(val) && typeof val === 'number' ? '' : val; saveActiveSession(); updateProgress(); }));
+      const bindInp = (c, k, pFunc) => container.querySelectorAll(c).forEach(i => i.addEventListener('input', e => { 
+        let val = pFunc(e.target.value);
+        if (typeof val === 'number' && isNaN(val)) val = '';
+        activeSession.exercises[parseInt(e.target.dataset.ei)].sets[parseInt(e.target.dataset.si)][k] = val; 
+        saveActiveSession(); 
+        updateProgress(); 
+      }));
       bindInp('.weight-input', 'weight', parseFloat); bindInp('.reps-input', 'reps', parseInt); bindInp('.rir-input', 'rir', v => v);
       
       container.querySelectorAll('.set-check').forEach(btn => btn.addEventListener('click', e => toggleSet(parseInt(e.currentTarget.dataset.ei), parseInt(e.currentTarget.dataset.si))));
@@ -770,22 +662,10 @@
     }
 
     function toggleWarmup(ei, si) { const set = activeSession.exercises[ei].sets[si]; set.isWarmup = !set.isWarmup; saveActiveSession(); renderLogView(); }
-    
     function toggleSet(ei, si) {
       const set = activeSession.exercises[ei].sets[si]; set.done = !set.done;
-      if (set.done) { 
-          vibrate(); 
-          if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, set.weight); 
-          showRestTimer(getRestTime(activeSession.exercises[ei].name)); 
-          
-          // Micro Pulse Animation
-          const rowEl = document.getElementById(`set-${ei}-${si}`);
-          rowEl.classList.remove('pulse-animate');
-          void rowEl.offsetWidth; // trigger reflow
-          rowEl.classList.add('pulse-animate');
-      }
-      saveActiveSession(); 
-      setTimeout(renderLogView, 100); // Slight delay so animation can start
+      if (set.done) { vibrate(); if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, set.weight); showRestTimer(getRestTime(activeSession.exercises[ei].name)); }
+      saveActiveSession(); renderLogView();
     }
 
     function openSwapModal(ei) {
@@ -801,23 +681,17 @@
       if (!activeSession) return;
       let comp = 0, tot = 0; activeSession.exercises.forEach(ex => { if (ex.sets.every(s => s.done)) comp++; tot++; });
       document.getElementById('log-progress-s9t0').style.width = (tot > 0 ? Math.round((comp / tot) * 100) : 0) + '%';
-      document.getElementById('log-progress-txt-u1v2').textContent = `${comp} / ${tot} exercises complete`;
+      document.getElementById('log-progress-txt-u1v2').textContent = `${comp} /${tot} exercises complete`;
       document.getElementById('finish-btn-y5z6').disabled = !activeSession.exercises.some(ex => ex.sets.some(s => s.done));
-    }
-
-    function updateLogTimerUI() {
-      if (!activeSession) return;
-      const el = Math.floor((Date.now() - activeSession.startTime) / 1000); 
-      document.getElementById('log-timer-o5p6').textContent = `${String(Math.floor(el / 60)).padStart(2, '0')}:${String(el % 60).padStart(2, '0')}`;
     }
 
     function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(updateLogTimerUI, 1000);
+      timerInterval = setInterval(() => { if (!activeSession) return; const el = Math.floor((Date.now() - activeSession.startTime) / 1000); document.getElementById('log-timer-o5p6').textContent = `${String(Math.floor(el / 60)).padStart(2, '0')}:${String(el % 60).padStart(2, '0')}`; }, 1000);
     }
 
     // ===========================
-    // DIET VIEW
+    // DIET & SUPPLEMENTS VIEW
     // ===========================
     function renderDiet() {
       const isRest = REST_DAYS.includes(todayKey());
@@ -827,408 +701,14 @@
       document.getElementById('diet-status-text').textContent = travelModeActive ? "Travel / Maintenance (3,200 kcal)" : (isRest ? "Rest Day Targets" : "Training Day Targets");
       document.getElementById('diet-cal-target').textContent = targets.cal.toLocaleString();
       
-      const log = getDietLog(); const todayStr = getBioDate().toDateString(); const todayMeals = log.filter(m => getBioDate(m.time).toDateString() === todayStr);
+      const log = getDietLog(); const todayStr = new Date().toDateString(); const todayMeals = log.filter(m => new Date(m.time).toDateString() === todayStr);
       let cCal = 0, cP = 0, cC = 0, cF = 0; todayMeals.forEach(m => { cCal+=m.cal; cP+=m.p; cC+=m.c; cF+=m.f; });
       
       document.getElementById('diet-cal-current').textContent = cCal.toLocaleString();
       document.getElementById('diet-cal-remain').textContent = `${(targets.cal - cCal).toLocaleString()} left`;
       
-      const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} / ${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
+      const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} /${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
       updateBar('p', cP, targets.p); updateBar('c', cC, targets.c); updateBar('f', cF, targets.f);
 
       document.getElementById('diet-today-list').innerHTML = todayMeals.length === 0 ? `<p class="text-sm text-[#6b6b80] text-center py-4">No meals logged today.</p>` : 
-        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name}</p><p class="text-[10px] text-[#6b6b80]">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div><div class="text-right"><p class="text-sm font-bold">${m.cal} kcal</p><p class="text-[10px] text-[#6b6b80]">${m.p}P · ${m.c}C · ${m.f}F</p></div><button class="text-[#ff4757] font-bold text-lg px-2 delete-meal-btn" data-id="${m.id}">×</button></div>`).join('');
-          
-      document.querySelectorAll('.delete-meal-btn').forEach(btn => btn.addEventListener('click', (e) => { deleteTargetId = e.currentTarget.dataset.id; deleteTargetType = 'diet'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
-
-      renderSupplements();
-    }
-
-    function renderSupplements() {
-      const config = getSuppConfig();
-      const log = getSuppLog();
-      const todayStr = getBioDate().toDateString();
-      if (!log[todayStr]) log[todayStr] = [];
-
-      const container = document.getElementById('supp-list-container');
-      const groups = { morning: [], evening: [], other: [] };
-      config.forEach(s => { if(groups[s.time]) groups[s.time].push(s); else groups.other.push(s); });
-
-      let html = '';
-      ['morning', 'other', 'evening'].forEach(time => {
-        if(groups[time].length === 0) return;
-        const title = time === 'other' ? 'Pre/Post Workout' : time.charAt(0).toUpperCase() + time.slice(1);
-        html += `<h3 class="text-[10px] font-bold text-[#6b6b80] uppercase tracking-wider mb-2 mt-4">${title}</h3>`;
-        html += `<div class="card space-y-3 mb-2 p-4">`;
-        groups[time].forEach(s => {
-           const isDone = log[todayStr].includes(s.id);
-           html += `
-             <div class="flex items-center justify-between supp-row ${isDone ? 'opacity-40' : ''}">
-               <div class="flex-1 pr-3">
-                 <p class="text-sm font-bold ${isDone ? 'line-through text-[#6b6b80]' : ''}">${s.name}</p>
-                 ${s.note ? `<p class="text-[10px] text-[#6b6b80] mt-0.5 leading-tight">${s.note}</p>` : ''}
-               </div>
-               <button class="set-check ${isDone ? 'checked' : ''} toggle-supp-btn" data-id="${s.id}" style="width:28px; height:28px; font-size:12px;">✓</button>
-             </div>
-           `;
-        });
-        html += `</div>`;
-      });
-      container.innerHTML = html;
-
-      container.querySelectorAll('.toggle-supp-btn').forEach(btn => {
-         btn.addEventListener('click', (e) => {
-            const id = e.currentTarget.dataset.id;
-            let currentLog = getSuppLog();
-            if(!currentLog[todayStr]) currentLog[todayStr] = [];
-            if(currentLog[todayStr].includes(id)) { currentLog[todayStr] = currentLog[todayStr].filter(i => i !== id); } 
-            else { currentLog[todayStr].push(id); vibrate(); }
-            saveSuppLog(currentLog);
-            renderSupplements();
-         });
-      });
-    }
-
-    function renderSuppEditList() {
-       const config = getSuppConfig();
-       const container = document.getElementById('supp-edit-list');
-       if(config.length === 0) { container.innerHTML = '<p class="text-xs text-[#6b6b80] text-center">No supplements added.</p>'; return; }
-       container.innerHTML = config.map(s => `
-         <div class="flex justify-between items-center bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
-           <div>
-             <p class="text-xs font-bold">${s.name}</p>
-             <p class="text-[9px] text-[#6b6b80]">${s.time.toUpperCase()} | ${s.note}</p>
-           </div>
-           <button class="text-[#ff4757] font-bold px-3 text-lg del-supp-cfg-btn" data-id="${s.id}">×</button>
-         </div>
-       `).join('');
-
-       container.querySelectorAll('.del-supp-cfg-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-             const id = e.currentTarget.dataset.id;
-             let cfg = getSuppConfig().filter(s => s.id !== id);
-             saveSuppConfig(cfg); renderSuppEditList(); renderSupplements();
-          });
-       });
-    }
-
-    // Autocomplete Logic
-    function renderAutocomplete(query) {
-      const list = document.getElementById('autocomplete-list');
-      const saved = getSavedMeals();
-      const filtered = query ? saved.filter(m => m.name.toLowerCase().includes(query.toLowerCase())) : saved;
-      
-      if (filtered.length === 0) { list.style.display = 'none'; return; }
-      
-      list.innerHTML = filtered.map(m => `
-        <div class="autocomplete-item" data-id="${m.id}">
-          <div class="flex-1" onclick="fillMeal('${m.id}')">
-            <p class="text-sm font-bold text-white">${m.name}</p>
-            <p class="text-[10px] text-[#6b6b80]">${m.cal} kcal · ${m.p}P · ${m.c}C · ${m.f}F</p>
-          </div>
-          <button class="text-[#ff4757] font-bold px-2 py-1" onclick="deleteSavedMeal('${m.id}', event)">×</button>
-        </div>
-      `).join('');
-      list.style.display = 'block';
-    }
-
-    window.fillMeal = function(id) {
-       const m = getSavedMeals().find(x => x.id === id);
-       if(m) {
-          document.getElementById('diet-input-name').value = m.name;
-          document.getElementById('diet-input-qty').value = '1';
-          document.getElementById('diet-input-cal').value = m.cal;
-          document.getElementById('diet-input-p').value = m.p;
-          document.getElementById('diet-input-c').value = m.c;
-          document.getElementById('diet-input-f').value = m.f;
-          document.getElementById('autocomplete-list').style.display = 'none';
-       }
-    };
-
-    window.deleteSavedMeal = function(id, e) {
-       e.stopPropagation();
-       const updated = getSavedMeals().filter(x => x.id !== id);
-       setSavedMeals(updated);
-       renderAutocomplete(document.getElementById('diet-input-name').value);
-    };
-
-    document.addEventListener('click', (e) => { if(!e.target.closest('.autocomplete-wrapper')) { const list = document.getElementById('autocomplete-list'); if(list) list.style.display = 'none'; } });
-    document.getElementById('diet-input-name').addEventListener('input', (e) => renderAutocomplete(e.target.value));
-    document.getElementById('diet-input-name').addEventListener('focus', (e) => renderAutocomplete(e.target.value));
-
-
-    // Diet Tab Buttons
-    document.getElementById('supp-edit-btn').addEventListener('click', () => { renderSuppEditList(); document.getElementById('supp-modal').style.display = 'flex'; });
-    document.getElementById('supp-close-btn').addEventListener('click', () => { document.getElementById('supp-modal').style.display = 'none'; });
-
-    document.getElementById('new-supp-add-btn').addEventListener('click', () => {
-      const name = document.getElementById('new-supp-name').value; const note = document.getElementById('new-supp-note').value; const time = document.getElementById('new-supp-time').value;
-      if(!name) return;
-      const cfg = getSuppConfig(); cfg.push({ id: 's'+Date.now(), time, name, note }); saveSuppConfig(cfg);
-      document.getElementById('new-supp-name').value = ''; document.getElementById('new-supp-note').value = '';
-      renderSuppEditList(); renderSupplements();
-    });
-
-    document.getElementById('diet-travel-btn').addEventListener('click', (e) => {
-      travelModeActive = !travelModeActive;
-      e.currentTarget.style.color = travelModeActive ? '#fff' : '#6b6b80'; e.currentTarget.style.background = travelModeActive ? 'var(--teal)' : 'var(--elevated)';
-      renderDiet();
-    });
-
-    document.getElementById('diet-add-btn').addEventListener('click', () => {
-      const nameBase = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const qty = parseFloat(document.getElementById('diet-input-qty').value) || 1;
-      const name = qty !== 1 ? `${nameBase} (x${qty})` : nameBase;
-
-      const baseCal = parseFloat(document.getElementById('diet-input-cal').value) || 0; 
-      const baseP = parseFloat(document.getElementById('diet-input-p').value) || 0;
-      const baseC = parseFloat(document.getElementById('diet-input-c').value) || 0; 
-      const baseF = parseFloat(document.getElementById('diet-input-f').value) || 0;
-      
-      if(baseCal===0 && baseP===0) return;
-      
-      const cal = Math.round(baseCal * qty);
-      const p = Math.round(baseP * qty);
-      const c = Math.round(baseC * qty);
-      const f = Math.round(baseF * qty);
-      
-      const log = getDietLog(); 
-      log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); 
-      saveDietLog(log);
-      
-      document.getElementById('diet-input-name').value = ''; 
-      document.getElementById('diet-input-qty').value = '1';
-      document.getElementById('diet-input-cal').value = ''; 
-      document.getElementById('diet-input-p').value = ''; 
-      document.getElementById('diet-input-c').value = ''; 
-      document.getElementById('diet-input-f').value = ''; 
-      renderDiet();
-    });
-
-    document.getElementById('diet-save-add-btn').addEventListener('click', () => {
-      const nameBase = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const qty = parseFloat(document.getElementById('diet-input-qty').value) || 1;
-      const name = qty !== 1 ? `${nameBase} (x${qty})` : nameBase;
-
-      const baseCal = parseFloat(document.getElementById('diet-input-cal').value) || 0; 
-      const baseP = parseFloat(document.getElementById('diet-input-p').value) || 0;
-      const baseC = parseFloat(document.getElementById('diet-input-c').value) || 0; 
-      const baseF = parseFloat(document.getElementById('diet-input-f').value) || 0;
-      
-      if(baseCal===0 && baseP===0) return;
-      
-      const cal = Math.round(baseCal * qty);
-      const p = Math.round(baseP * qty);
-      const c = Math.round(baseC * qty);
-      const f = Math.round(baseF * qty);
-      
-      const mealDataLog = { name, cal, p, c, f };
-      const log = getDietLog(); 
-      log.push({ id: Date.now().toString(), time: new Date().toISOString(), ...mealDataLog }); 
-      saveDietLog(log);
-
-      const mealDataBase = { name: nameBase, cal: baseCal, p: baseP, c: baseC, f: baseF };
-      let saved = getSavedMeals();
-      const existingIdx = saved.findIndex(x => x.name.toLowerCase() === nameBase.toLowerCase());
-      if(existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...mealDataBase };
-      else saved.push({ id: 'sm'+Date.now().toString(), ...mealDataBase });
-      setSavedMeals(saved);
-
-      document.getElementById('diet-input-name').value = ''; 
-      document.getElementById('diet-input-qty').value = '1';
-      document.getElementById('diet-input-cal').value = ''; 
-      document.getElementById('diet-input-p').value = ''; 
-      document.getElementById('diet-input-c').value = ''; 
-      document.getElementById('diet-input-f').value = ''; 
-      renderDiet();
-    });
-
-    document.getElementById('diet-export-btn').addEventListener('click', () => {
-      const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
-      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g)\n";
-      log.forEach(m => { const d = new Date(m.time); csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${m.name}",${m.cal},${m.p},${m.c},${m.f}\n`; });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `Alex_Diet_Export_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-    });
-
-    document.getElementById('diet-edit-targets-btn').addEventListener('click', () => {
-      const t = getTargets();
-      document.getElementById('edit-t-cal').value = t.training.cal; document.getElementById('edit-t-p').value = t.training.p; document.getElementById('edit-t-c').value = t.training.c; document.getElementById('edit-t-f').value = t.training.f;
-      document.getElementById('edit-r-cal').value = t.rest.cal; document.getElementById('edit-r-p').value = t.rest.p; document.getElementById('edit-r-c').value = t.rest.c; document.getElementById('edit-r-f').value = t.rest.f;
-      document.getElementById('targets-modal').style.display = 'flex';
-    });
-    document.getElementById('targets-cancel-btn').addEventListener('click', () => document.getElementById('targets-modal').style.display = 'none');
-    document.getElementById('targets-save-btn').addEventListener('click', () => {
-      const nt = {
-        training: { cal: parseInt(document.getElementById('edit-t-cal').value)||0, p: parseInt(document.getElementById('edit-t-p').value)||0, c: parseInt(document.getElementById('edit-t-c').value)||0, f: parseInt(document.getElementById('edit-t-f').value)||0 },
-        rest: { cal: parseInt(document.getElementById('edit-r-cal').value)||0, p: parseInt(document.getElementById('edit-r-p').value)||0, c: parseInt(document.getElementById('edit-r-c').value)||0, f: parseInt(document.getElementById('edit-r-f').value)||0 }
-      };
-      localStorage.setItem('diet_targets', JSON.stringify(nt)); document.getElementById('targets-modal').style.display = 'none'; renderDiet();
-    });
-
-    // ===========================
-    // FINISH & SAVE
-    // ===========================
-    function showRestTimer(seconds) { 
-      if (restTimerInterval) clearInterval(restTimerInterval); 
-      lastRestTotal = seconds; 
-      restEndTime = Date.now() + (seconds * 1000); 
-      document.getElementById('rest-overlay-g4h4').style.display = 'flex'; 
-      updateRestDisplay(); 
-      restTimerInterval = setInterval(() => { 
-        let left = Math.ceil((restEndTime - Date.now()) / 1000);
-        if (left <= 0) { clearInterval(restTimerInterval); playBeep(); vibrate(); setTimeout(dismissRest, 500); } 
-        updateRestDisplay(); 
-      }, 1000); 
-    }
-    
-    function updateRestDisplay() { 
-      let left = Math.max(0, Math.ceil((restEndTime - Date.now()) / 1000));
-      document.getElementById('rest-time-txt-k6l6').textContent = `${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`; 
-      document.getElementById('rest-ring-i5j5').style.strokeDashoffset = 326.7 * (left/lastRestTotal); 
-    }
-    
-    function dismissRest() { 
-      if (restTimerInterval) clearInterval(restTimerInterval); 
-      restEndTime = 0;
-      document.getElementById('rest-overlay-g4h4').style.display = 'none'; 
-    }
-
-    function showFinishModal() {
-      if (!activeSession) return; let vol=0, comp=0, tot=0;
-      activeSession.exercises.forEach(ex => ex.sets.forEach(s => { tot++; if (s.done) { comp++; if (s.weight&&s.reps&&!s.isWarmup) vol+=s.weight*s.reps; } }));
-      document.getElementById('finish-summary-s0t0').innerHTML = `<div class="flex justify-between"><span class="text-[#6b6b80]">Duration</span><span class="font-semibold">${Math.floor((Date.now()-activeSession.startTime)/60000)} min</span></div><div class="flex justify-between"><span class="text-[#6b6b80]">Sets Completed</span><span class="font-semibold">${comp} / ${tot}</span></div><div class="flex justify-between"><span class="text-[#6b6b80]">Total Volume</span><span class="font-semibold">${vol.toLocaleString()} lbs</span></div>`;
-      document.getElementById('finish-modal-q9r9').style.display = 'flex';
-    }
-
-    function confirmFinish() {
-      if (!activeSession) return;
-      const session = { id: Date.now().toString(), date: new Date().toISOString(), dayKey: activeSession.dayKey, exercises: activeSession.exercises.map(ex => ({ name: ex.name, sets: ex.sets.filter(s => s.done), note: ex.note||'' })).filter(ex => ex.sets.length > 0) };
-      const log = getLog(); log.push(session); saveLog(log);
-      document.getElementById('finish-modal-q9r9').style.display = 'none';
-      if (timerInterval) clearInterval(timerInterval); activeSession = null; saveActiveSession(); releaseWakeLock(); spawnConfetti(); switchView('home');
-    }
-
-    // Modal UI Listeners
-    document.getElementById('block-tracker-ui').addEventListener('click', () => {
-      const c = getBlockConfig();
-      document.getElementById('block-start-date').value = c.startDate || '';
-      document.getElementById('block-total-weeks').value = c.totalWeeks || 16;
-      document.getElementById('block-deload-toggle').checked = c.isDeload;
-      document.getElementById('block-modal').style.display = 'flex';
-    });
-    document.getElementById('block-cancel-btn').addEventListener('click', () => document.getElementById('block-modal').style.display = 'none');
-    document.getElementById('block-save-btn').addEventListener('click', () => {
-      saveBlockConfig({ startDate: document.getElementById('block-start-date').value, totalWeeks: parseInt(document.getElementById('block-total-weeks').value) || 16, isDeload: document.getElementById('block-deload-toggle').checked });
-      document.getElementById('block-modal').style.display = 'none'; renderHome();
-    });
-
-    document.getElementById('log-cancel-btn-q7r8').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'flex');
-    document.getElementById('cancel-workout-no').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'none');
-    document.getElementById('cancel-workout-yes').addEventListener('click', () => {
-      document.getElementById('cancel-workout-modal').style.display = 'none';
-      if (timerInterval) clearInterval(timerInterval); if (restTimerInterval) clearInterval(restTimerInterval);
-      activeSession = null; saveActiveSession(); releaseWakeLock(); document.getElementById('rest-overlay-g4h4').style.display = 'none'; switchView('home');
-    });
-
-    // ===========================
-    // HISTORY VIEW
-    // ===========================
-    function renderHistory() {
-      const log = [...getLog()].sort((a,b) => new Date(b.date) - new Date(a.date)); const container = document.getElementById('history-list-a1b1');
-      if (log.length === 0) { container.innerHTML = `<div class="text-center py-16"><p class="text-3xl mb-3">🏋️</p><p class="text-sm text-[#6b6b80]">No sessions logged yet.</p></div>`; return; }
-      container.innerHTML = log.map(session => {
-        const day = PROGRAM[session.dayKey];
-        const detailRows = session.exercises.map(ex => {
-          if (ex.sets.length === 0) return '';
-          const setStrs = ex.sets.map((s, i) => `<span class="text-[#6b6b80]">S${i+1}</span> ${s.isWarmup?'[W] ':''}${s.weight}×${s.reps} ${s.rir?`<span class="text-[10px] text-[#ff9f1c]">@${s.rir}RIR</span>`:''}`).join('&nbsp;&nbsp;');
-          return `<div class="py-2 border-b border-[var(--border)]"><p class="text-sm font-semibold mb-1">${ex.name}</p><p class="text-xs">${setStrs}</p>${ex.note?`<p class="text-xs text-[#6b6b80] mt-1 italic">${ex.note}</p>`:''}</div>`;
-        }).join('');
-        return `<div class="card history-card" data-session-id="${session.id}"><div class="flex items-center justify-between mb-1"><span class="text-xs font-bold" style="color:${day?day.color:'#6c63ff'}">${day?day.label:session.dayKey}</span><span class="text-xs text-[#44445a]">${formatDate(session.date)}</span></div><div class="flex gap-4 text-xs text-[#6b6b80]"><span>${totalVolume(session).toLocaleString()} lbs vol</span><span>${session.exercises.filter(e=>e.sets.length>0).length} exercises</span></div><div class="history-detail" id="detail-${session.id}"><div class="mt-3 space-y-0">${detailRows}</div><button class="delete-session-btn text-xs text-[#ff4757] mt-3 font-bold" data-id="${session.id}">Delete Session</button></div></div>`;
-      }).join('');
-      container.querySelectorAll('.history-card').forEach(card => card.addEventListener('click', e => { if (!e.target.closest('.delete-session-btn')) document.getElementById('detail-' + card.dataset.sessionId).classList.toggle('open'); }));
-      container.querySelectorAll('.delete-session-btn').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); deleteTargetId = btn.dataset.id; deleteTargetType='workout'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
-    }
-
-    document.getElementById('export-data-btn').addEventListener('click', () => { 
-      const wLog = getLog(); const dLog = getDietLog();
-      if (wLog.length === 0 && dLog.length === 0) return alert('No history to export.'); 
-      const backup = { version: 1, workout_log: wLog, diet_log: dLog, timestamp: new Date().toISOString() };
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' })); a.download = `Alex_Unified_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
-    });
-    document.getElementById('import-data-file').addEventListener('change', e => { 
-      const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); 
-      reader.onload = event => { 
-        try { 
-          const parsed = JSON.parse(event.target.result); 
-          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
-          else if (Array.isArray(parsed)) { saveLog(parsed); renderHistory(); alert('Legacy workout data imported successfully!'); }
-          else alert('Invalid file format.'); 
-        } catch { alert('Failed to read file.'); } 
-      }; 
-      reader.readAsText(file); 
-    });
-
-    document.getElementById('delete-cancel-a4b4').addEventListener('click', () => { document.getElementById('delete-modal-y3z3').style.display = 'none'; deleteTargetId = null; });
-    document.getElementById('delete-confirm-c5d5').addEventListener('click', () => {
-      if (deleteTargetType === 'workout') { saveLog(getLog().filter(s => s.id !== deleteTargetId)); renderHistory(); renderHome(); }
-      if (deleteTargetType === 'diet') { saveDietLog(getDietLog().filter(m => m.id !== deleteTargetId)); renderDiet(); }
-      document.getElementById('delete-modal-y3z3').style.display = 'none'; deleteTargetId = null;
-    });
-
-    // ===========================
-    // PROGRESS VIEW
-    // ===========================
-    function renderProgress() {
-      const select = document.getElementById('progress-select-c2d2');
-      if (select.options.length <= 1) { select.innerHTML = '<option value="">Select an exercise…</option>'; getAllExercises().forEach(ex => select.appendChild(new Option(ex.name, ex.name))); }
-    }
-    document.getElementById('progress-select-c2d2').addEventListener('change', e => {
-      if (!e.target.value) return; const container = document.getElementById('progress-content-e3f3'); const sessions = getAllSessionsForExercise(e.target.value);
-      if (sessions.length < 2) { container.innerHTML = `<div class="text-center py-12"><p class="text-2xl mb-2">📊</p><p class="text-sm text-[#6b6b80]">Log more sessions to see progress</p></div>`; return; }
-      const last8 = sessions.slice(-8); let bestWeight = 0, bestVolSet = { w: 0, r: 0, vol: 0 };
-      sessions.forEach(s => s.sets.forEach(st => { if (st.weight > bestWeight) bestWeight = st.weight; const v = (st.weight||0) * (st.reps||0); if (v > bestVolSet.vol) bestVolSet = { w: st.weight, r: st.reps, vol: v }; }));
-      const topWeights = last8.map(s => Math.max(...s.sets.map(st => st.weight||0), 0)); const maxW = Math.max(...topWeights, 1);
-      container.innerHTML = `<div class="card mb-4"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Top Set Weight</h3><div class="chart-bar-container">${last8.map((s, i) => `<div class="flex flex-col items-center flex-1"><div class="chart-bar w-full" style="height:${Math.max((topWeights[i] / maxW) * 140, 8)}px;background:linear-gradient(180deg,var(--purple),rgba(108,99,255,0.4));"><span class="chart-bar-label text-white">${topWeights[i]}</span></div><div class="chart-bar-date">${getBioDate(s.date).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})}</div></div>`).join('')}</div></div><div class="card"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Personal Records</h3><div class="space-y-3"><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">🏆</span><div><p class="text-xs text-[#6b6b80]">Best Weight</p><p class="text-lg font-black">${bestWeight} lbs</p></div></div><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">💪</span><div><p class="text-xs text-[#6b6b80]">Best Volume Set</p><p class="text-lg font-black">${bestVolSet.w} × ${bestVolSet.r}</p></div></div></div></div>`;
-    });
-
-    // ===========================
-    // EVENT BINDINGS
-    // ===========================
-    document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
-    document.getElementById('rest-skip-o8p8').addEventListener('click', dismissRest);
-    document.getElementById('rest-add30-m7n7').addEventListener('click', () => { restEndTime += 30000; lastRestTotal += 30; updateRestDisplay(); });
-    document.getElementById('rest-overlay-g4h4').addEventListener('click', e => { if (e.target === e.currentTarget) dismissRest(); });
-    document.getElementById('finish-btn-y5z6').addEventListener('click', showFinishModal);
-    document.getElementById('finish-cancel-u1v1').addEventListener('click', () => document.getElementById('finish-modal-q9r9').style.display = 'none');
-    document.getElementById('finish-confirm-w2x2').addEventListener('click', confirmFinish);
-
-    // ===========================
-    // INIT
-    // ===========================
-    
-    // Aggressive re-sync when app comes back from background
-    document.addEventListener('visibilitychange', async () => { 
-      if (document.visibilityState === 'visible') {
-        if (currentView === 'log' && activeSession) { await requestWakeLock(); updateLogTimerUI(); }
-        if (restEndTime > Date.now()) updateRestDisplay();
-      }
-    });
-    
-    loadActiveSession();
-    renderHome();
-  </script>
-  
-  <!-- Bulletproof Auto-Update Registration Engine -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(reg => { reg.update(); });
-      });
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) { refreshing = true; window.location.reload(); }
-      });
-    }
-  </script>
-</body>
-</html>
+        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name
