@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alex-tracker-v3';
+const CACHE_NAME = 'alex-tracker-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,7 +7,7 @@ const ASSETS = [
   '/icon-512.png'
 ];
 
-// Install event: Cache the core files
+// Install event: Cache core files
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -17,7 +17,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// Activate event: Take control immediately & clean up old caches
+// Activate event: Instantly purge older caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -33,7 +33,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// Fetch event: Serve from cache if available, otherwise go to network
+// Fetch event: Serve cached assets first, fall back to network
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
