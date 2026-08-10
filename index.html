@@ -137,7 +137,12 @@
     .autocomplete-item:last-child { border-bottom: none; }
     .autocomplete-item:active { background: var(--card); }
 
-    @media (min-width: 768px) { body { max-width: 600px; margin: 0 auto; } }
+    /* Desktop Viewport Alignment */
+    @media (min-width: 768px) { 
+      body { max-width: 600px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); } 
+      .bottom-nav { max-width: 600px; left: 50%; transform: translateX(-50%); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+      .rest-overlay, .modal-overlay { max-width: 600px; left: 50%; transform: translateX(-50%); }
+    }
   </style>
 </head>
 <body>
@@ -254,13 +259,14 @@
     <div id="history-list-a1b1" class="space-y-3 mb-8"></div>
     <div class="card bg-transparent border-[var(--border)] mt-8">
       <h3 class="text-sm font-bold text-[#6b6b80] mb-3">Data Management</h3>
-      <p class="text-xs text-[#44445a] mb-4">Unified backup: Export your workouts and nutrition to a single JSON file.</p>
-      <div class="flex gap-3">
+      <p class="text-xs text-[#44445a] mb-4">Unified backup: Export or import your workouts and nutrition data.</p>
+      <div class="flex gap-3 mb-3">
         <button id="export-data-btn" class="btn-primary btn-secondary py-3 text-sm flex-1">Export Data</button>
         <label class="btn-primary py-3 text-sm flex-1 text-center cursor-pointer m-0">
           Import Data <input type="file" id="import-data-file" class="hidden" accept=".json" />
         </label>
       </div>
+      <button id="reset-active-session-btn" class="w-full text-xs font-bold text-[#ff4757] bg-[rgba(255,71,87,0.1)] py-2 rounded-xl">Clear Active Workout Cache</button>
     </div>
   </div>
 
@@ -381,6 +387,8 @@
     function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
     document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible' && currentView === 'log') { await requestWakeLock(); } });
 
+    const floatVal = v => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
+
     const ALTERNATIVES = {
       'Pec Deck': ['Cable Crossovers', 'Machine Flyes', 'Flat DB Flyes', 'Supine Press'],
       'Incline Machine Press': ['Supine Press', 'Flat Barbell Press', 'Machine Chest Press', 'Incline DB Press'],
@@ -484,9 +492,9 @@
     let timerInterval = null; let restTimerInterval = null; let lastRestTotal = 90; let restTimeLeft = 0;
     let deleteTargetId = null; let deleteTargetType = null; let activeSwapEi = null; let travelModeActive = false;
 
-    function getLog() { try { return JSON.parse(localStorage.getItem('workout_log')) || []; } catch { return []; } }
+    function getLog() { try { const res = JSON.parse(localStorage.getItem('workout_log')); return Array.isArray(res) ? res : []; } catch { return []; } }
     function saveLog(log) { localStorage.setItem('workout_log', JSON.stringify(log)); }
-    function getDietLog() { try { return JSON.parse(localStorage.getItem('diet_log')) || []; } catch { return []; } }
+    function getDietLog() { try { const res = JSON.parse(localStorage.getItem('diet_log')); return Array.isArray(res) ? res : []; } catch { return []; } }
     function saveDietLog(log) { localStorage.setItem('diet_log', JSON.stringify(log)); }
     function saveActiveSession() { if (activeSession) localStorage.setItem('active_session', JSON.stringify(activeSession)); else localStorage.removeItem('active_session'); }
     function loadActiveSession() { try { const s = localStorage.getItem('active_session'); if (s) activeSession = JSON.parse(s); } catch {} }
@@ -500,13 +508,57 @@
     function setSavedMeals(meals) { localStorage.setItem('saved_meals', JSON.stringify(meals)); }
 
     function todayKey() { return DAY_MAP[new Date().getDay()]; }
-    function formatDate(d) { return new Date(d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
+    function formatDate(d) { return new Date(d || Date.now()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
     function getWeekStart() { const d = new Date(); d.setHours(0,0,0,0); const day = d.getDay(); const diff = day === 0 ? 6 : day - 1; d.setDate(d.getDate() - diff); return d; }
-    function getPrevSession(dayKey, exerciseName) { const log = getLog(); const sessions = [...log].filter(s => s.dayKey === dayKey).sort((a,b) => new Date(b.date) - new Date(a.date)); for (const s of sessions) { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight || st.reps)) return ex; } return null; }
-    function getAllSessionsForExercise(exerciseName) { const log = getLog(); const results = []; [...log].sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(s => { const ex = s.exercises.find(e => e.name === exerciseName); if (ex && ex.sets.some(st => st.weight && st.reps && !st.isWarmup)) { results.push({ date: s.date, sets: ex.sets.filter(st => !st.isWarmup) }); } }); return results; }
+
+    function getPrevSession(dayKey, exerciseName) {
+      try {
+        const log = getLog();
+        if (!Array.isArray(log)) return null;
+        const sessions = [...log].filter(s => s && s.dayKey === dayKey).sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+        for (const s of sessions) {
+          if (!s || !Array.isArray(s.exercises)) continue;
+          const ex = s.exercises.find(e => e && e.name === exerciseName);
+          if (ex && Array.isArray(ex.sets) && ex.sets.some(st => st && (st.weight || st.reps))) return ex;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function getAllSessionsForExercise(exerciseName) {
+      try {
+        const log = getLog();
+        if (!Array.isArray(log)) return [];
+        const results = [];
+        [...log].sort((a,b) => new Date(a.date || 0) - new Date(b.date || 0)).forEach(s => {
+          if (!s || !Array.isArray(s.exercises)) return;
+          const ex = s.exercises.find(e => e && e.name === exerciseName);
+          if (ex && Array.isArray(ex.sets) && ex.sets.some(st => st && st.weight && st.reps && !st.isWarmup)) {
+            results.push({ date: s.date, sets: ex.sets.filter(st => st && !st.isWarmup) });
+          }
+        });
+        return results;
+      } catch (e) { return []; }
+    }
+
     function getRestTime(exName) { const ex = getAllExercises().find(e => e.name === exName); if (ex && ex.isCore) return 60; if (COMPOUND_EXERCISES.includes(exName)) return 180; return 90; }
-    function getAllExercises() { const all = []; const seen = new Set(); for (const dk of Object.keys(PROGRAM)) { for (const ex of PROGRAM[dk].exercises) { if (!seen.has(ex.name)) { all.push(ex); seen.add(ex.name); } } } return all; }
-    function totalVolume(session) { let vol = 0; for (const ex of session.exercises) { for (const s of ex.sets) { if (s.weight && s.reps && !s.isWarmup) vol += s.weight * s.reps; } } return vol; }
+    function getAllExercises() { const all = []; const seen = new Set(); for (const dk of Object.keys(PROGRAM)) { if (PROGRAM[dk] && Array.isArray(PROGRAM[dk].exercises)) { for (const ex of PROGRAM[dk].exercises) { if (!seen.has(ex.name)) { all.push(ex); seen.add(ex.name); } } } } return all; }
+    
+    function totalVolume(session) {
+      let vol = 0;
+      if (!session || !Array.isArray(session.exercises)) return 0;
+      for (const ex of session.exercises) {
+        if (!ex || !Array.isArray(ex.sets)) continue;
+        for (const s of ex.sets) {
+          if (!s) continue;
+          const w = floatVal(s.weight);
+          const r = floatVal(s.reps);
+          if (w > 0 && r > 0 && !s.isWarmup) vol += w * r;
+        }
+      }
+      return vol;
+    }
+
     function playBeep() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value = 800; osc.type = 'sine'; gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2); osc.start(); osc.stop(ctx.currentTime + 0.2); } catch {} }
     function vibrate() { if (navigator.vibrate) navigator.vibrate(50); }
 
@@ -514,9 +566,21 @@
       const sessions = getAllSessionsForExercise(exerciseName); 
       if (sessions.length === 0) return false;
       let maxWeight = 0;
-      for (const s of sessions) { for (const st of s.sets) { if (st.weight > maxWeight) maxWeight = st.weight; } }
+      for (const s of sessions) {
+        if (s && Array.isArray(s.sets)) {
+          for (const st of s.sets) {
+            const w = floatVal(st.weight);
+            if (w > maxWeight) maxWeight = w;
+          }
+        }
+      }
       if (weight > maxWeight && weight > 0) {
-        const el = document.createElement('div'); el.className = 'pr-banner'; el.textContent = `🏆 NEW PR! ${exerciseName}:${weight} lbs`; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); return true;
+        const el = document.createElement('div'); 
+        el.className = 'pr-banner'; 
+        el.textContent = `🏆 NEW PR! ${exerciseName}: ${weight} lbs`; 
+        document.body.appendChild(el); 
+        setTimeout(() => el.remove(), 3000); 
+        return true;
       }
       return false;
     }
@@ -541,39 +605,109 @@
     function findNextWorkoutDay() { const keys = ['mon','tue','wed','thu','fri','sat','sun']; for (let i = 1; i <= 7; i++) { const k = keys[(keys.indexOf(todayKey()) + i) % 7]; if (PROGRAM[k]) return k; } return 'mon'; }
 
     function renderHome() {
-      const dk = todayKey();
-      document.getElementById('date-today-c3d4').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-      
-      const banner = document.getElementById('resume-banner');
-      if (activeSession) banner.classList.remove('hidden'); else banner.classList.add('hidden');
+      try {
+        const dk = todayKey();
+        const dateEl = document.getElementById('date-today-c3d4');
+        if (dateEl) {
+          dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        
+        const banner = document.getElementById('resume-banner');
+        if (banner) {
+          if (activeSession) banner.classList.remove('hidden'); else banner.classList.add('hidden');
+        }
 
-      const todayCard = document.getElementById('today-card-e5f6');
-      if (PROGRAM[dk]) {
-        const day = PROGRAM[dk];
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span></div><div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div><button id="start-today-btn" class="btn-primary">START WORKOUT →</button>`;
-        document.getElementById('start-today-btn').addEventListener('click', () => { switchView('log'); });
-      } else {
-        const nextDk = findNextWorkoutDay(); const nextDay = PROGRAM[nextDk];
-        todayCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Rest Day</span><span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span></div><p class="text-sm text-[#6b6b80] mb-4">🥩 Hit your rest day macro targets</p><p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk]})</p><button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg,${nextDay.color},${nextDay.color}cc);">START ${nextDay.label.toUpperCase()} →</button>`;
-        document.getElementById('start-next-btn').addEventListener('click', () => { switchView('log'); });
+        const todayCard = document.getElementById('today-card-e5f6');
+        if (todayCard) {
+          if (PROGRAM[dk]) {
+            const day = PROGRAM[dk];
+            todayCard.innerHTML = `
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-widest" style="color:${day.color}">Today's Workout</span>
+                <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day.color}20;color:${day.color}">${day.label}</span>
+              </div>
+              <div class="flex flex-wrap mb-4">${day.exercises.map(e => `<span class="exercise-pill">${e.name}</span>`).join('')}</div>
+              <button id="start-today-btn" class="btn-primary">START WORKOUT →</button>
+            `;
+            document.getElementById('start-today-btn')?.addEventListener('click', () => { switchView('log'); });
+          } else {
+            const nextDk = findNextWorkoutDay();
+            const nextDay = PROGRAM[nextDk] || { label: 'Workout', color: '#6c63ff' };
+            todayCard.innerHTML = `
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Rest Day</span>
+                <span class="text-xs font-bold px-3 py-1 rounded-full bg-[var(--elevated)] text-[#6b6b80]">Recovery</span>
+              </div>
+              <p class="text-sm text-[#6b6b80] mb-4">🥩 Hit your rest day macro targets</p>
+              <p class="text-xs text-[#44445a] mb-4">Next up: <strong style="color:${nextDay.color}">${nextDay.label}</strong> (${DAY_LABELS[nextDk] || ''})</p>
+              <button id="start-next-btn" class="btn-primary" style="background:linear-gradient(135deg, ${nextDay.color}, #8b7aff);">START ${nextDay.label.toUpperCase()} →</button>
+            `;
+            document.getElementById('start-next-btn')?.addEventListener('click', () => { switchView('log'); });
+          }
+        }
+
+        const container = document.getElementById('week-cal-g7h8');
+        const log = getLog();
+        const weekStart = getWeekStart();
+        const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+        const weekLogs = Array.isArray(log) ? log.filter(s => s && s.date && new Date(s.date) >= weekStart && new Date(s.date) < weekEnd) : [];
+        const completedDays = new Set(weekLogs.map(s => s.dayKey));
+
+        let wVol = 0;
+        weekLogs.forEach(s => wVol += totalVolume(s));
+        const volStat = document.getElementById('weekly-volume-stat');
+        if (volStat) volStat.textContent = `${Math.round(wVol).toLocaleString()} lbs lifted`;
+
+        if (container) {
+          container.innerHTML = WEEK_ORDER.map(k => `
+            <div class="flex flex-col items-center gap-1">
+              <button class="week-dot ${completedDays.has(k) ? 'completed' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled')} ${k === todayKey() ? 'today' : ''}" data-daykey="${k}">
+                ${(DAY_LABELS[k] || k).charAt(0)}
+              </button>
+              <span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k] || k}</span>
+            </div>
+          `).join('');
+          
+          container.querySelectorAll('.week-dot').forEach(dot => dot.addEventListener('click', () => {
+            const dk = dot.dataset.daykey;
+            if (PROGRAM[dk]) {
+              if (!activeSession) startWorkout(dk);
+              switchView('log');
+            }
+          }));
+        }
+
+        const lastCard = document.getElementById('last-session-i9j0');
+        if (lastCard) {
+          if (Array.isArray(log) && log.length > 0) {
+            lastCard.style.display = 'block';
+            const sorted = [...log].filter(s => s && s.date).sort((a,b) => new Date(b.date) - new Date(a.date));
+            if (sorted.length > 0) {
+              const last = sorted[0];
+              const day = PROGRAM[last.dayKey];
+              const lastExs = Array.isArray(last.exercises) ? last.exercises.slice(0, 3) : [];
+              lastCard.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Last Session</span>
+                  <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day?day.color:'#6c63ff'}20;color:${day?day.color:'#6c63ff'}">${day?day.label:last.dayKey}</span>
+                </div>
+                <p class="text-xs text-[#44445a] mb-2">${formatDate(last.date)} · ${Math.round(totalVolume(last)).toLocaleString()} lbs volume</p>
+                ${lastExs.map(ex => {
+                  if (!ex || !Array.isArray(ex.sets)) return '';
+                  const best = ex.sets.reduce((b, s) => (s && !s.isWarmup && (floatVal(s.weight) > (b.weight||0))) ? s : b, {});
+                  return best.weight ? `<div class="flex justify-between text-sm py-1"><span class="text-[#6b6b80]">${ex.name}</span><span class="font-semibold">${best.weight} × ${best.reps||'?'}</span></div>` : '';
+                }).join('')}
+              `;
+            } else {
+              lastCard.style.display = 'none';
+            }
+          } else {
+            lastCard.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('renderHome error:', err);
       }
-
-      const container = document.getElementById('week-cal-g7h8');
-      const log = getLog(); const weekStart = getWeekStart(); const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
-      const weekLogs = log.filter(s => new Date(s.date) >= weekStart && new Date(s.date) < weekEnd);
-      const completedDays = new Set(weekLogs.map(s => s.dayKey));
-
-      let wVol = 0; weekLogs.forEach(s => wVol += totalVolume(s));
-      document.getElementById('weekly-volume-stat').textContent = `${wVol.toLocaleString()} lbs lifted`;
-
-      container.innerHTML = WEEK_ORDER.map(k => `<div class="flex flex-col items-center gap-1"><button class="week-dot ${completedDays.has(k) ? 'completed' : (REST_DAYS.includes(k) ? 'rest' : 'scheduled')} ${k === todayKey() ? 'today' : ''}" data-daykey="${k}">${DAY_LABELS[k].charAt(0)}</button><span class="text-[9px] text-[#44445a] font-medium">${DAY_LABELS[k]}</span></div>`).join('');
-      container.querySelectorAll('.week-dot').forEach(dot => dot.addEventListener('click', () => { if (PROGRAM[dot.dataset.daykey]) { if(!activeSession) startWorkout(dot.dataset.daykey); switchView('log'); } }));
-
-      const lastCard = document.getElementById('last-session-i9j0');
-      if (log.length > 0) {
-        lastCard.style.display = 'block'; const last = [...log].sort((a,b) => new Date(b.date) - new Date(a.date))[0]; const day = PROGRAM[last.dayKey];
-        lastCard.innerHTML = `<div class="flex items-center justify-between mb-3"><span class="text-xs font-bold uppercase tracking-widest text-[#6b6b80]">Last Session</span><span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${day?day.color:'#6c63ff'}20;color:${day?day.color:'#6c63ff'}">${day?day.label:last.dayKey}</span></div><p class="text-xs text-[#44445a] mb-2">${formatDate(last.date)} · ${totalVolume(last).toLocaleString()} lbs volume</p>${last.exercises.slice(0, 3).map(ex => { const best = ex.sets.reduce((b, s) => (!s.isWarmup && s.weight > (b.weight||0)) ? s : b, {}); return best.weight ? `<div class="flex justify-between text-sm py-1"><span class="text-[#6b6b80]">${ex.name}</span><span class="font-semibold">${best.weight} × ${best.reps||'?'}</span></div>` : ''; }).join('')}`;
-      } else { lastCard.style.display = 'none'; }
     }
 
     function startWorkout(dayKey) {
@@ -584,7 +718,7 @@
           name: ex.name, targetSets: ex.targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
           sets: Array.from({ length: ex.targetSets }, (_, i) => {
             const p = getPrevSession(dayKey, ex.name);
-            return { weight: p && p.sets[i] ? p.sets[i].weight||'' : '', reps: '', rir: p && p.sets[i] ? p.sets[i].rir||'' : '', done: false, isWarmup: false };
+            return { weight: p && p.sets && p.sets[i] ? p.sets[i].weight||'' : '', reps: '', rir: p && p.sets && p.sets[i] ? p.sets[i].rir||'' : '', done: false, isWarmup: false };
           }), note: ''
         }))
       };
@@ -598,21 +732,25 @@
       document.getElementById('log-progress-s9t0').style.background = day.color;
       const container = document.getElementById('log-exercises-w3x4'); container.innerHTML = '';
 
+      if (!Array.isArray(activeSession.exercises)) activeSession.exercises = [];
+
       activeSession.exercises.forEach((exDef, ei) => {
         const prev = getPrevSession(activeSession.dayKey, exDef.name);
         const card = document.createElement('div'); card.className = 'card';
         if (exDef.isCore) { card.style.borderColor = 'rgba(108,99,255,0.3)'; card.style.background = 'rgba(108,99,255,0.05)'; }
 
-        let prevHTML = prev ? `<div class="prev-data">Last: ${prev.sets.filter(s=>!s.isWarmup).map((s, i) => `S${i+1} ${s.weight||0}×${s.reps||0}${s.rir?' @'+s.rir:''}`).join(' ')}</div>` : `<div class="prev-data">— First time logging this exercise</div>`;
+        let prevHTML = (prev && Array.isArray(prev.sets)) ? `<div class="prev-data">Last: ${prev.sets.filter(s=>s&&!s.isWarmup).map((s, i) => `S${i+1} ${s.weight||0}×${s.reps||0}${s.rir?' @'+s.rir:''}`).join(' ')}</div>` : `<div class="prev-data">— First time logging this exercise</div>`;
+
+        if (!Array.isArray(exDef.sets)) exDef.sets = [];
 
         let setsHTML = exDef.sets.map((sData, si) => {
-          const pSet = prev && prev.sets[si] ? prev.sets[si] : null;
+          const pSet = prev && prev.sets && prev.sets[si] ? prev.sets[si] : null;
           return `
             <div class="set-row ${sData.done ? 'completed' : ''} ${sData.isWarmup ? 'is-warmup' : ''}" id="set-${ei}-${si}">
               <button class="warmup-btn ${sData.isWarmup ? 'active' : ''}" data-ei="${ei}" data-si="${si}">W</button>
               <span class="set-label text-xs font-bold text-[#6b6b80] w-6 text-center">S${si+1}</span>
               <div class="flex-1 flex items-center gap-1">
-                <input type="number" inputmode="decimal" placeholder="${pSet ? pSet.weight\vert{}\vert{}'0' : 'lbs'}" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
+                <input type="number" inputmode="decimal" placeholder="${(pSet && pSet.weight) ? pSet.weight : 'lbs'}" value="${sData.weight}" class="weight-input" data-ei="${ei}" data-si="${si}" />
                 <span class="text-xs text-[#44445a] font-bold">×</span>
                 <div class="w-12"><input type="number" inputmode="numeric" placeholder="Reps" value="${sData.reps}" class="reps-input" data-ei="${ei}" data-si="${si}" /></div>
                 <span class="text-xs text-[#44445a] font-bold">@</span>
@@ -647,7 +785,7 @@
         saveActiveSession(); 
         updateProgress(); 
       }));
-      bindInp('.weight-input', 'weight', parseFloat); bindInp('.reps-input', 'reps', parseInt); bindInp('.rir-input', 'rir', v => v);
+      bindInp('.weight-input', 'weight', floatVal); bindInp('.reps-input', 'reps', v => parseInt(v, 10) || ''); bindInp('.rir-input', 'rir', v => v);
       
       container.querySelectorAll('.set-check').forEach(btn => btn.addEventListener('click', e => toggleSet(parseInt(e.currentTarget.dataset.ei), parseInt(e.currentTarget.dataset.si))));
       container.querySelectorAll('.warmup-btn').forEach(btn => btn.addEventListener('click', e => toggleWarmup(parseInt(e.currentTarget.dataset.ei), parseInt(e.currentTarget.dataset.si))));
@@ -664,7 +802,7 @@
     function toggleWarmup(ei, si) { const set = activeSession.exercises[ei].sets[si]; set.isWarmup = !set.isWarmup; saveActiveSession(); renderLogView(); }
     function toggleSet(ei, si) {
       const set = activeSession.exercises[ei].sets[si]; set.done = !set.done;
-      if (set.done) { vibrate(); if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, set.weight); showRestTimer(getRestTime(activeSession.exercises[ei].name)); }
+      if (set.done) { vibrate(); if (set.weight && !set.isWarmup) checkPR(activeSession.exercises[ei].name, floatVal(set.weight)); showRestTimer(getRestTime(activeSession.exercises[ei].name)); }
       saveActiveSession(); renderLogView();
     }
 
@@ -679,15 +817,21 @@
 
     function updateProgress() {
       if (!activeSession) return;
-      let comp = 0, tot = 0; activeSession.exercises.forEach(ex => { if (ex.sets.every(s => s.done)) comp++; tot++; });
+      let comp = 0, tot = 0; activeSession.exercises.forEach(ex => { if (Array.isArray(ex.sets) && ex.sets.every(s => s.done)) comp++; tot++; });
       document.getElementById('log-progress-s9t0').style.width = (tot > 0 ? Math.round((comp / tot) * 100) : 0) + '%';
-      document.getElementById('log-progress-txt-u1v2').textContent = `${comp} /${tot} exercises complete`;
-      document.getElementById('finish-btn-y5z6').disabled = !activeSession.exercises.some(ex => ex.sets.some(s => s.done));
+      document.getElementById('log-progress-txt-u1v2').textContent = `${comp} / ${tot} exercises complete`;
+      document.getElementById('finish-btn-y5z6').disabled = !activeSession.exercises.some(ex => Array.isArray(ex.sets) && ex.sets.some(s => s.done));
     }
 
     function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
-      timerInterval = setInterval(() => { if (!activeSession) return; const el = Math.floor((Date.now() - activeSession.startTime) / 1000); document.getElementById('log-timer-o5p6').textContent = `${String(Math.floor(el / 60)).padStart(2, '0')}:${String(el % 60).padStart(2, '0')}`; }, 1000);
+      timerInterval = setInterval(() => { 
+        if (!activeSession) return; 
+        const elapsed = Math.floor((Date.now() - activeSession.startTime) / 1000); 
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        document.getElementById('log-timer-o5p6').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`; 
+      }, 1000);
     }
 
     // ===========================
@@ -701,14 +845,371 @@
       document.getElementById('diet-status-text').textContent = travelModeActive ? "Travel / Maintenance (3,200 kcal)" : (isRest ? "Rest Day Targets" : "Training Day Targets");
       document.getElementById('diet-cal-target').textContent = targets.cal.toLocaleString();
       
-      const log = getDietLog(); const todayStr = new Date().toDateString(); const todayMeals = log.filter(m => new Date(m.time).toDateString() === todayStr);
-      let cCal = 0, cP = 0, cC = 0, cF = 0; todayMeals.forEach(m => { cCal+=m.cal; cP+=m.p; cC+=m.c; cF+=m.f; });
+      const log = getDietLog(); const todayStr = new Date().toDateString(); const todayMeals = log.filter(m => m && m.time && new Date(m.time).toDateString() === todayStr);
+      let cCal = 0, cP = 0, cC = 0, cF = 0; todayMeals.forEach(m => { cCal+=floatVal(m.cal); cP+=floatVal(m.p); cC+=floatVal(m.c); cF+=floatVal(m.f); });
       
       document.getElementById('diet-cal-current').textContent = cCal.toLocaleString();
       document.getElementById('diet-cal-remain').textContent = `${(targets.cal - cCal).toLocaleString()} left`;
       
-      const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} /${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
+      const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} / ${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
       updateBar('p', cP, targets.p); updateBar('c', cC, targets.c); updateBar('f', cF, targets.f);
 
       document.getElementById('diet-today-list').innerHTML = todayMeals.length === 0 ? `<p class="text-sm text-[#6b6b80] text-center py-4">No meals logged today.</p>` : 
-        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name
+        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name}</p><p class="text-[10px] text-[#6b6b80]">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div><div class="text-right"><p class="text-sm font-bold">${m.cal} kcal</p><p class="text-[10px] text-[#6b6b80]">${m.p}P · ${m.c}C · ${m.f}F</p></div><button class="text-[#ff4757] font-bold text-lg px-2 delete-meal-btn" data-id="${m.id}">×</button></div>`).join('');
+          
+      document.querySelectorAll('.delete-meal-btn').forEach(btn => btn.addEventListener('click', (e) => { deleteTargetId = e.currentTarget.dataset.id; deleteTargetType = 'diet'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
+
+      renderSupplements();
+    }
+
+    function renderSupplements() {
+      const config = getSuppConfig();
+      const log = getSuppLog();
+      const todayStr = new Date().toDateString();
+      if (!log[todayStr]) log[todayStr] = [];
+
+      const container = document.getElementById('supp-list-container');
+      const groups = { morning: [], evening: [], other: [] };
+      config.forEach(s => { if(groups[s.time]) groups[s.time].push(s); else groups.other.push(s); });
+
+      let html = '';
+      ['morning', 'other', 'evening'].forEach(time => {
+        if(groups[time].length === 0) return;
+        const title = time === 'other' ? 'Pre/Post Workout' : time.charAt(0).toUpperCase() + time.slice(1);
+        html += `<h3 class="text-[10px] font-bold text-[#6b6b80] uppercase tracking-wider mb-2 mt-4">${title}</h3>`;
+        html += `<div class="card space-y-3 mb-2 p-4">`;
+        groups[time].forEach(s => {
+           const isDone = log[todayStr].includes(s.id);
+           html += `
+             <div class="flex items-center justify-between supp-row ${isDone ? 'opacity-40' : ''}">
+               <div class="flex-1 pr-3">
+                 <p class="text-sm font-bold ${isDone ? 'line-through text-[#6b6b80]' : ''}">${s.name}</p>
+                 ${s.note ? `<p class="text-[10px] text-[#6b6b80] mt-0.5 leading-tight">${s.note}</p>` : ''}
+               </div>
+               <button class="set-check ${isDone ? 'checked' : ''} toggle-supp-btn" data-id="${s.id}" style="width:28px; height:28px; font-size:12px;">✓</button>
+             </div>
+           `;
+        });
+        html += `</div>`;
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('.toggle-supp-btn').forEach(btn => {
+         btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            let currentLog = getSuppLog();
+            if(!currentLog[todayStr]) currentLog[todayStr] = [];
+            if(currentLog[todayStr].includes(id)) { currentLog[todayStr] = currentLog[todayStr].filter(i => i !== id); } 
+            else { currentLog[todayStr].push(id); vibrate(); }
+            saveSuppLog(currentLog);
+            renderSupplements();
+         });
+      });
+    }
+
+    function renderSuppEditList() {
+       const config = getSuppConfig();
+       const container = document.getElementById('supp-edit-list');
+       if(config.length === 0) { container.innerHTML = '<p class="text-xs text-[#6b6b80] text-center">No supplements added.</p>'; return; }
+       container.innerHTML = config.map(s => `
+         <div class="flex justify-between items-center bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
+           <div>
+             <p class="text-xs font-bold">${s.name}</p>
+             <p class="text-[9px] text-[#6b6b80]">${s.time.toUpperCase()} | ${s.note}</p>
+           </div>
+           <button class="text-[#ff4757] font-bold px-3 text-lg del-supp-cfg-btn" data-id="${s.id}">×</button>
+         </div>
+       `).join('');
+
+       container.querySelectorAll('.del-supp-cfg-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+             const id = e.currentTarget.dataset.id;
+             let cfg = getSuppConfig().filter(s => s.id !== id);
+             saveSuppConfig(cfg); renderSuppEditList(); renderSupplements();
+          });
+       });
+    }
+
+    // Autocomplete Logic
+    function renderAutocomplete(query) {
+      const list = document.getElementById('autocomplete-list');
+      const saved = getSavedMeals();
+      const filtered = query ? saved.filter(m => m && m.name && m.name.toLowerCase().includes(query.toLowerCase())) : saved;
+      
+      if (filtered.length === 0) { list.style.display = 'none'; return; }
+      
+      list.innerHTML = filtered.map(m => `
+        <div class="autocomplete-item" data-id="${m.id}">
+          <div class="flex-1" onclick="fillMeal('${m.id}')">
+            <p class="text-sm font-bold text-white">${m.name}</p>
+            <p class="text-[10px] text-[#6b6b80]">${m.cal} kcal · ${m.p}P · ${m.c}C · ${m.f}F</p>
+          </div>
+          <button class="text-[#ff4757] font-bold px-2 py-1" onclick="deleteSavedMeal('${m.id}', event)">×</button>
+        </div>
+      `).join('');
+      list.style.display = 'block';
+    }
+
+    window.fillMeal = function(id) {
+       const m = getSavedMeals().find(x => x && x.id === id);
+       if(m) {
+          document.getElementById('diet-input-name').value = m.name;
+          document.getElementById('diet-input-cal').value = m.cal;
+          document.getElementById('diet-input-p').value = m.p;
+          document.getElementById('diet-input-c').value = m.c;
+          document.getElementById('diet-input-f').value = m.f;
+          document.getElementById('autocomplete-list').style.display = 'none';
+       }
+    };
+
+    window.deleteSavedMeal = function(id, e) {
+       e.stopPropagation();
+       const updated = getSavedMeals().filter(x => x && x.id !== id);
+       setSavedMeals(updated);
+       renderAutocomplete(document.getElementById('diet-input-name').value);
+    };
+
+    document.addEventListener('click', (e) => { if(!e.target.closest('.autocomplete-wrapper')) { const list = document.getElementById('autocomplete-list'); if(list) list.style.display = 'none'; } });
+    document.getElementById('diet-input-name').addEventListener('input', (e) => renderAutocomplete(e.target.value));
+    document.getElementById('diet-input-name').addEventListener('focus', (e) => renderAutocomplete(e.target.value));
+
+    // Diet Tab Buttons
+    document.getElementById('supp-edit-btn').addEventListener('click', () => { renderSuppEditList(); document.getElementById('supp-modal').style.display = 'flex'; });
+    document.getElementById('supp-close-btn').addEventListener('click', () => { document.getElementById('supp-modal').style.display = 'none'; });
+
+    document.getElementById('new-supp-add-btn').addEventListener('click', () => {
+      const name = document.getElementById('new-supp-name').value; const note = document.getElementById('new-supp-note').value; const time = document.getElementById('new-supp-time').value;
+      if(!name) return;
+      const cfg = getSuppConfig(); cfg.push({ id: 's'+Date.now(), time, name, note }); saveSuppConfig(cfg);
+      document.getElementById('new-supp-name').value = ''; document.getElementById('new-supp-note').value = '';
+      renderSuppEditList(); renderSupplements();
+    });
+
+    document.getElementById('diet-travel-btn').addEventListener('click', (e) => {
+      travelModeActive = !travelModeActive;
+      e.currentTarget.style.color = travelModeActive ? '#fff' : '#6b6b80'; e.currentTarget.style.background = travelModeActive ? 'var(--teal)' : 'var(--elevated)';
+      renderDiet();
+    });
+
+    document.getElementById('diet-add-btn').addEventListener('click', () => {
+      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
+      const cal = parseInt(document.getElementById('diet-input-cal').value, 10) || 0; const p = parseInt(document.getElementById('diet-input-p').value, 10) || 0;
+      const c = parseInt(document.getElementById('diet-input-c').value, 10) || 0; const f = parseInt(document.getElementById('diet-input-f').value, 10) || 0;
+      if(cal===0 && p===0) return;
+      
+      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); saveDietLog(log);
+      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
+    });
+
+    document.getElementById('diet-save-add-btn').addEventListener('click', () => {
+      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
+      const cal = parseInt(document.getElementById('diet-input-cal').value, 10) || 0; const p = parseInt(document.getElementById('diet-input-p').value, 10) || 0;
+      const c = parseInt(document.getElementById('diet-input-c').value, 10) || 0; const f = parseInt(document.getElementById('diet-input-f').value, 10) || 0;
+      if(cal===0 && p===0) return;
+      
+      const mealData = { name, cal, p, c, f };
+      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), ...mealData }); saveDietLog(log);
+
+      let saved = getSavedMeals();
+      const existingIdx = saved.findIndex(x => x && x.name && x.name.toLowerCase() === name.toLowerCase());
+      if(existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...mealData };
+      else saved.push({ id: 'sm'+Date.now().toString(), ...mealData });
+      setSavedMeals(saved);
+
+      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
+    });
+
+    document.getElementById('diet-export-btn').addEventListener('click', () => {
+      const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
+      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g)\n";
+      log.forEach(m => { const d = new Date(m.time); csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${m.name}",${m.cal},${m.p},${m.c},${m.f}\n`; });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `Alex_Diet_Export_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    });
+
+    document.getElementById('diet-edit-targets-btn').addEventListener('click', () => {
+      const t = getTargets();
+      document.getElementById('edit-t-cal').value = t.training.cal; document.getElementById('edit-t-p').value = t.training.p; document.getElementById('edit-t-c').value = t.training.c; document.getElementById('edit-t-f').value = t.training.f;
+      document.getElementById('edit-r-cal').value = t.rest.cal; document.getElementById('edit-r-p').value = t.rest.p; document.getElementById('edit-r-c').value = t.rest.c; document.getElementById('edit-r-f').value = t.rest.f;
+      document.getElementById('targets-modal').style.display = 'flex';
+    });
+    document.getElementById('targets-cancel-btn').addEventListener('click', () => document.getElementById('targets-modal').style.display = 'none');
+    document.getElementById('targets-save-btn').addEventListener('click', () => {
+      const nt = {
+        training: { cal: parseInt(document.getElementById('edit-t-cal').value, 10)||0, p: parseInt(document.getElementById('edit-t-p').value, 10)||0, c: parseInt(document.getElementById('edit-t-c').value, 10)||0, f: parseInt(document.getElementById('edit-t-f').value, 10)||0 },
+        rest: { cal: parseInt(document.getElementById('edit-r-cal').value, 10)||0, p: parseInt(document.getElementById('edit-r-p').value, 10)||0, c: parseInt(document.getElementById('edit-r-c').value, 10)||0, f: parseInt(document.getElementById('edit-r-f').value, 10)||0 }
+      };
+      localStorage.setItem('diet_targets', JSON.stringify(nt)); document.getElementById('targets-modal').style.display = 'none'; renderDiet();
+    });
+
+    // ===========================
+    // FINISH & SAVE
+    // ===========================
+    function showRestTimer(seconds) { 
+      if (restTimerInterval) clearInterval(restTimerInterval); 
+      lastRestTotal = seconds; 
+      restTimeLeft = seconds; 
+      const overlay = document.getElementById('rest-overlay-g4h4');
+      if (overlay) overlay.style.display = 'flex'; 
+      updateRestDisplay(); 
+      restTimerInterval = setInterval(() => { 
+        restTimeLeft--; 
+        if (restTimeLeft <= 0) { 
+          clearInterval(restTimerInterval); 
+          playBeep(); 
+          vibrate(); 
+          setTimeout(dismissRest, 500); 
+        } 
+        updateRestDisplay(); 
+      }, 1000); 
+    }
+
+    function updateRestDisplay() { 
+      const txt = document.getElementById('rest-time-txt-k6l6');
+      if (txt) txt.textContent = `${Math.floor(restTimeLeft/60)}:${String(restTimeLeft%60).padStart(2,'0')}`; 
+      const ring = document.getElementById('rest-ring-i5j5');
+      if (ring) ring.style.strokeDashoffset = 326.7 * (1 - (restTimeLeft/lastRestTotal)); 
+    }
+
+    function dismissRest() { 
+      if (restTimerInterval) clearInterval(restTimerInterval); 
+      const overlay = document.getElementById('rest-overlay-g4h4');
+      if (overlay) overlay.style.display = 'none'; 
+    }
+
+    function showFinishModal() {
+      if (!activeSession) return; let vol=0, comp=0, tot=0;
+      if (Array.isArray(activeSession.exercises)) {
+        activeSession.exercises.forEach(ex => {
+          if (Array.isArray(ex.sets)) {
+            ex.sets.forEach(s => { tot++; if (s.done) { comp++; if (s.weight&&s.reps&&!s.isWarmup) vol+=floatVal(s.weight)*floatVal(s.reps); } });
+          }
+        });
+      }
+      document.getElementById('finish-summary-s0t0').innerHTML = `<div class="flex justify-between"><span class="text-[#6b6b80]">Duration</span><span class="font-semibold">${Math.floor((Date.now()-activeSession.startTime)/60000)} min</span></div><div class="flex justify-between"><span class="text-[#6b6b80]">Sets Completed</span><span class="font-semibold">${comp} / ${tot}</span></div><div class="flex justify-between"><span class="text-[#6b6b80]">Total Volume</span><span class="font-semibold">${Math.round(vol).toLocaleString()} lbs</span></div>`;
+      document.getElementById('finish-modal-q9r9').style.display = 'flex';
+    }
+
+    function confirmFinish() {
+      if (!activeSession) return;
+      const session = { id: Date.now().toString(), date: new Date().toISOString(), dayKey: activeSession.dayKey, exercises: activeSession.exercises.map(ex => ({ name: ex.name, sets: ex.sets.filter(s => s.done), note: ex.note||'' })).filter(ex => ex.sets.length > 0) };
+      const log = getLog(); log.push(session); saveLog(log);
+      document.getElementById('finish-modal-q9r9').style.display = 'none';
+      if (timerInterval) clearInterval(timerInterval); activeSession = null; saveActiveSession(); releaseWakeLock(); switchView('home');
+    }
+
+    document.getElementById('log-cancel-btn-q7r8').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'flex');
+    document.getElementById('cancel-workout-no').addEventListener('click', () => document.getElementById('cancel-workout-modal').style.display = 'none');
+    document.getElementById('cancel-workout-yes').addEventListener('click', () => {
+      document.getElementById('cancel-workout-modal').style.display = 'none';
+      if (timerInterval) clearInterval(timerInterval); if (restTimerInterval) clearInterval(restTimerInterval);
+      activeSession = null; saveActiveSession(); releaseWakeLock(); document.getElementById('rest-overlay-g4h4').style.display = 'none'; switchView('home');
+    });
+
+    // Reset active session
+    document.getElementById('reset-active-session-btn').addEventListener('click', () => {
+      activeSession = null;
+      saveActiveSession();
+      alert('Active workout session cleared!');
+      renderHome();
+    });
+
+    // ===========================
+    // HISTORY VIEW
+    // ===========================
+    function renderHistory() {
+      const log = [...getLog()].filter(s => s && s.date).sort((a,b) => new Date(b.date) - new Date(a.date)); 
+      const container = document.getElementById('history-list-a1b1');
+      if (log.length === 0) { container.innerHTML = `<div class="text-center py-16"><p class="text-3xl mb-3">🏋️</p><p class="text-sm text-[#6b6b80]">No sessions logged yet.</p></div>`; return; }
+      container.innerHTML = log.map(session => {
+        const day = PROGRAM[session.dayKey];
+        const exs = Array.isArray(session.exercises) ? session.exercises : [];
+        const detailRows = exs.map(ex => {
+          if (!ex || !Array.isArray(ex.sets) || ex.sets.length === 0) return '';
+          const setStrs = ex.sets.map((s, i) => `<span class="text-[#6b6b80]">S${i+1}</span> ${s.isWarmup?'[W] ':''}${s.weight}×${s.reps} ${s.rir?`<span class="text-[10px] text-[#ff9f1c]">@${s.rir}RIR</span>`:''}`).join('&nbsp;&nbsp;');
+          return `<div class="py-2 border-b border-[var(--border)]"><p class="text-sm font-semibold mb-1">${ex.name}</p><p class="text-xs">${setStrs}</p>${ex.note?`<p class="text-xs text-[#6b6b80] mt-1 italic">${ex.note}</p>`:''}</div>`;
+        }).join('');
+        return `<div class="card history-card" data-session-id="${session.id}"><div class="flex items-center justify-between mb-1"><span class="text-xs font-bold" style="color:${day?day.color:'#6c63ff'}">${day?day.label:session.dayKey}</span><span class="text-xs text-[#44445a]">${formatDate(session.date)}</span></div><div class="flex gap-4 text-xs text-[#6b6b80]"><span>${Math.round(totalVolume(session)).toLocaleString()} lbs vol</span><span>${exs.filter(e=>e&&Array.isArray(e.sets)&&e.sets.length>0).length} exercises</span></div><div class="history-detail" id="detail-${session.id}"><div class="mt-3 space-y-0">${detailRows}</div><button class="delete-session-btn text-xs text-[#ff4757] mt-3 font-bold" data-id="${session.id}">Delete Session</button></div></div>`;
+      }).join('');
+      container.querySelectorAll('.history-card').forEach(card => card.addEventListener('click', e => { if (!e.target.closest('.delete-session-btn')) document.getElementById('detail-' + card.dataset.sessionId).classList.toggle('open'); }));
+      container.querySelectorAll('.delete-session-btn').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); deleteTargetId = btn.dataset.id; deleteTargetType='workout'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
+    }
+
+    document.getElementById('export-data-btn').addEventListener('click', () => { 
+      const wLog = getLog(); const dLog = getDietLog();
+      if (wLog.length === 0 && dLog.length === 0) return alert('No history to export.'); 
+      const backup = { version: 1, workout_log: wLog, diet_log: dLog, timestamp: new Date().toISOString() };
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' })); a.download = `Alex_Unified_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
+    });
+    document.getElementById('import-data-file').addEventListener('change', e => { 
+      const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); 
+      reader.onload = event => { 
+        try { 
+          const parsed = JSON.parse(event.target.result); 
+          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
+          else if (Array.isArray(parsed)) { saveLog(parsed); renderHistory(); alert('Legacy workout data imported successfully!'); }
+          else alert('Invalid file format.'); 
+        } catch { alert('Failed to read file.'); } 
+      }; 
+      reader.readAsText(file); 
+    });
+
+    document.getElementById('delete-cancel-a4b4').addEventListener('click', () => { document.getElementById('delete-modal-y3z3').style.display = 'none'; deleteTargetId = null; });
+    document.getElementById('delete-confirm-c5d5').addEventListener('click', () => {
+      if (deleteTargetType === 'workout') { saveLog(getLog().filter(s => s && s.id !== deleteTargetId)); renderHistory(); renderHome(); }
+      if (deleteTargetType === 'diet') { saveDietLog(getDietLog().filter(m => m && m.id !== deleteTargetId)); renderDiet(); }
+      document.getElementById('delete-modal-y3z3').style.display = 'none'; deleteTargetId = null;
+    });
+
+    // ===========================
+    // PROGRESS VIEW
+    // ===========================
+    function renderProgress() {
+      const select = document.getElementById('progress-select-c2d2');
+      if (select.options.length <= 1) { select.innerHTML = '<option value="">Select an exercise…</option>'; getAllExercises().forEach(ex => select.appendChild(new Option(ex.name, ex.name))); }
+    }
+    document.getElementById('progress-select-c2d2').addEventListener('change', e => {
+      if (!e.target.value) return; const container = document.getElementById('progress-content-e3f3'); const sessions = getAllSessionsForExercise(e.target.value);
+      if (sessions.length < 2) { container.innerHTML = `<div class="text-center py-12"><p class="text-2xl mb-2">📊</p><p class="text-sm text-[#6b6b80]">Log more sessions to see progress</p></div>`; return; }
+      const last8 = sessions.slice(-8); let bestWeight = 0, bestVolSet = { w: 0, r: 0, vol: 0 };
+      sessions.forEach(s => {
+        if (s && Array.isArray(s.sets)) {
+          s.sets.forEach(st => {
+            const w = floatVal(st.weight);
+            const r = floatVal(st.reps);
+            if (w > bestWeight) bestWeight = w;
+            const v = w * r;
+            if (v > bestVolSet.vol) bestVolSet = { w, r, vol: v };
+          });
+        }
+      });
+      const topWeights = last8.map(s => Math.max(...(Array.isArray(s.sets) ? s.sets.map(st => floatVal(st.weight)) : [0]), 0)); 
+      const maxW = Math.max(...topWeights, 1);
+      container.innerHTML = `<div class="card mb-4"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Top Set Weight</h3><div class="chart-bar-container">${last8.map((s, i) => `<div class="flex flex-col items-center flex-1"><div class="chart-bar w-full" style="height:${Math.max((topWeights[i] / maxW) * 140, 8)}px;background:linear-gradient(180deg,var(--purple),rgba(108,99,255,0.4));"><span class="chart-bar-label text-white">${topWeights[i]}</span></div><div class="chart-bar-date">${new Date(s.date).toLocaleDateString('en-US',{month:'numeric',day:'numeric'})}</div></div>`).join('')}</div></div><div class="card"><h3 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Personal Records</h3><div class="space-y-3"><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">🏆</span><div><p class="text-xs text-[#6b6b80]">Best Weight</p><p class="text-lg font-black">${bestWeight} lbs</p></div></div><div class="flex items-center gap-3 p-3 rounded-xl bg-[var(--elevated)]"><span class="text-xl">💪</span><div><p class="text-xs text-[#6b6b80]">Best Volume Set</p><p class="text-lg font-black">${bestVolSet.w} × ${bestVolSet.r}</p></div></div></div></div>`;
+    });
+
+    // ===========================
+    // EVENT BINDINGS
+    // ===========================
+    document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+    document.getElementById('rest-skip-o8p8').addEventListener('click', dismissRest);
+    document.getElementById('rest-add30-m7n7').addEventListener('click', () => { restTimeLeft += 30; lastRestTotal += 30; });
+    document.getElementById('rest-overlay-g4h4').addEventListener('click', e => { if (e.target === e.currentTarget) dismissRest(); });
+    document.getElementById('finish-btn-y5z6').addEventListener('click', showFinishModal);
+    document.getElementById('finish-cancel-u1v1').addEventListener('click', () => document.getElementById('finish-modal-q9r9').style.display = 'none');
+    document.getElementById('finish-confirm-w2x2').addEventListener('click', confirmFinish);
+
+    // ===========================
+    // INIT
+    // ===========================
+    try {
+      loadActiveSession();
+      renderHome();
+    } catch (e) {
+      console.error('App init error:', e);
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js')); }
+  </script>
+</body>
+</html>
