@@ -230,9 +230,14 @@
 
     <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Quick Add Meal</h2>
     <div class="card mb-6 space-y-3">
-      <div class="autocomplete-wrapper">
-        <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
-        <div id="autocomplete-list" class="autocomplete-list"></div>
+   <div class="flex gap-2">
+        <div class="autocomplete-wrapper flex-1">
+          <input type="text" id="diet-input-name" class="left-align" placeholder="Search or Enter Food Name" autocomplete="off" />
+          <div id="autocomplete-list" class="autocomplete-list"></div>
+        </div>
+        <div class="w-20">
+          <input type="number" id="diet-input-qty" placeholder="Qty" value="1" step="0.5" min="0.1" class="input-field w-full" />
+        </div>
       </div>
       <div class="flex gap-3">
         <input type="number" id="diet-input-cal" placeholder="Calories" class="w-1/2" />
@@ -993,33 +998,83 @@
       renderDiet();
     });
 
-    document.getElementById('diet-add-btn').addEventListener('click', () => {
-      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const cal = parseInt(document.getElementById('diet-input-cal').value, 10) || 0; const p = parseInt(document.getElementById('diet-input-p').value, 10) || 0;
-      const c = parseInt(document.getElementById('diet-input-c').value, 10) || 0; const f = parseInt(document.getElementById('diet-input-f').value, 10) || 0;
-      if(cal===0 && p===0) return;
-      
-      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); saveDietLog(log);
-      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
-    });
+  // --- 1. LOG ONLY BUTTON ---
+document.getElementById('diet-add-btn').addEventListener('click', () => {
+  let name = document.getElementById('diet-input-name').value || 'Manual Entry';
+  const qty = parseFloat(document.getElementById('diet-input-qty')?.value) || 1;
+  
+  // Multiply the inputs by the quantity
+  const cal = Math.round((parseInt(document.getElementById('diet-input-cal').value, 10) || 0) * qty); 
+  const p = Math.round((parseInt(document.getElementById('diet-input-p').value, 10) || 0) * qty);
+  const c = Math.round((parseInt(document.getElementById('diet-input-c').value, 10) || 0) * qty); 
+  const f = Math.round((parseInt(document.getElementById('diet-input-f').value, 10) || 0) * qty);
+  
+  if (cal === 0 && p === 0) return;
+  
+  // Append (x2), (x0.5), etc. to the name if it's not 1
+  if (qty !== 1 && !name.includes('(x')) {
+    name = `${name} (x${qty})`;
+  }
 
-    document.getElementById('diet-save-add-btn').addEventListener('click', () => {
-      const name = document.getElementById('diet-input-name').value || 'Manual Entry';
-      const cal = parseInt(document.getElementById('diet-input-cal').value, 10) || 0; const p = parseInt(document.getElementById('diet-input-p').value, 10) || 0;
-      const c = parseInt(document.getElementById('diet-input-c').value, 10) || 0; const f = parseInt(document.getElementById('diet-input-f').value, 10) || 0;
-      if(cal===0 && p===0) return;
-      
-      const mealData = { name, cal, p, c, f };
-      const log = getDietLog(); log.push({ id: Date.now().toString(), time: new Date().toISOString(), ...mealData }); saveDietLog(log);
+  const log = getDietLog(); 
+  log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); 
+  saveDietLog(log);
 
-      let saved = getSavedMeals();
-      const existingIdx = saved.findIndex(x => x && x.name && x.name.toLowerCase() === name.toLowerCase());
-      if(existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...mealData };
-      else saved.push({ id: 'sm'+Date.now().toString(), ...mealData });
-      setSavedMeals(saved);
+  // Reset Form
+  document.getElementById('diet-input-name').value = ''; 
+  document.getElementById('diet-input-qty').value = '1';
+  document.getElementById('diet-input-cal').value = ''; 
+  document.getElementById('diet-input-p').value = ''; 
+  document.getElementById('diet-input-c').value = ''; 
+  document.getElementById('diet-input-f').value = ''; 
+  renderDiet();
+});
 
-      document.getElementById('diet-input-name').value = ''; document.getElementById('diet-input-cal').value = ''; document.getElementById('diet-input-p').value = ''; document.getElementById('diet-input-c').value = ''; document.getElementById('diet-input-f').value = ''; renderDiet();
-    });
+// --- 2. SAVE + LOG BUTTON ---
+document.getElementById('diet-save-add-btn').addEventListener('click', () => {
+  const rawName = document.getElementById('diet-input-name').value || 'Manual Entry';
+  const qty = parseFloat(document.getElementById('diet-input-qty')?.value) || 1;
+  
+  // Multiply the inputs by the quantity for the active log
+  const cal = Math.round((parseInt(document.getElementById('diet-input-cal').value, 10) || 0) * qty); 
+  const p = Math.round((parseInt(document.getElementById('diet-input-p').value, 10) || 0) * qty);
+  const c = Math.round((parseInt(document.getElementById('diet-input-c').value, 10) || 0) * qty); 
+  const f = Math.round((parseInt(document.getElementById('diet-input-f').value, 10) || 0) * qty);
+  
+  if (cal === 0 && p === 0) return;
+  
+  let finalName = rawName;
+  if (qty !== 1 && !rawName.includes('(x')) {
+    finalName = `${rawName} (x${qty})`;
+  }
+
+  // Push to today's log
+  const log = getDietLog(); 
+  log.push({ id: Date.now().toString(), time: new Date().toISOString(), name: finalName, cal, p, c, f }); 
+  saveDietLog(log);
+
+  // Save base 1x serving macros to your saved meals library
+  const baseCal = Math.round(cal / qty);
+  const baseP = Math.round(p / qty);
+  const baseC = Math.round(c / qty);
+  const baseF = Math.round(f / qty);
+  const baseMealData = { name: rawName, cal: baseCal, p: baseP, c: baseC, f: baseF };
+
+  let saved = getSavedMeals();
+  const existingIdx = saved.findIndex(x => x && x.name && x.name.toLowerCase() === rawName.toLowerCase());
+  if (existingIdx >= 0) saved[existingIdx] = { id: saved[existingIdx].id, ...baseMealData };
+  else saved.push({ id: 'sm'+Date.now().toString(), ...baseMealData });
+  setSavedMeals(saved);
+
+  // Reset Form
+  document.getElementById('diet-input-name').value = ''; 
+  document.getElementById('diet-input-qty').value = '1';
+  document.getElementById('diet-input-cal').value = ''; 
+  document.getElementById('diet-input-p').value = ''; 
+  document.getElementById('diet-input-c').value = ''; 
+  document.getElementById('diet-input-f').value = ''; 
+  renderDiet();
+});
 
     document.getElementById('diet-export-btn').addEventListener('click', () => {
       const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
