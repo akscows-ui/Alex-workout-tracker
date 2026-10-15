@@ -514,11 +514,11 @@
     function formatDate(d) { return new Date(d || Date.now()).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); }
     function getWeekStart() { const d = new Date(); d.setHours(0,0,0,0); const day = d.getDay(); const diff = day === 0 ? 6 : day - 1; d.setDate(d.getDate() - diff); return d; }
 
-    function getPrevSession(dayKey, exerciseName) {
+    function getPrevSession(exerciseName) {
       try {
         const log = getLog();
         if (!Array.isArray(log)) return null;
-        const sessions = [...log].filter(s => s && s.dayKey === dayKey).sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+        const sessions = [...log].filter(s => s).sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
         for (const s of sessions) {
           if (!s || !Array.isArray(s.exercises)) continue;
           const ex = s.exercises.find(e => e && e.name === exerciseName);
@@ -721,7 +721,7 @@
         exercises: day.exercises.map(ex => ({
           name: ex.name, targetSets: ex.targetSets, targetReps: ex.targetReps, isCore: ex.isCore,
           sets: Array.from({ length: ex.targetSets }, (_, i) => {
-            const p = getPrevSession(dayKey, ex.name);
+            const p = getPrevSession(ex.name);
             return { weight: p && p.sets && p.sets[i] ? p.sets[i].weight||'' : '', reps: '', rir: p && p.sets && p.sets[i] ? p.sets[i].rir||'' : '', done: false, isWarmup: false };
           }), note: ''
         }))
@@ -739,7 +739,7 @@
       if (!Array.isArray(activeSession.exercises)) activeSession.exercises = [];
 
       activeSession.exercises.forEach((exDef, ei) => {
-        const prev = getPrevSession(activeSession.dayKey, exDef.name);
+        const prev = getPrevSession(exDef.name);
         const card = document.createElement('div'); card.className = 'card';
         if (exDef.isCore) { card.style.borderColor = 'rgba(108,99,255,0.3)'; card.style.background = 'rgba(108,99,255,0.05)'; }
 
@@ -1076,7 +1076,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
     document.getElementById('diet-export-btn').addEventListener('click', () => {
       const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
       let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g)\n";
-      log.forEach(m => { const d = new Date(m.time); csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${m.name}",${m.cal},${m.p},${m.c},${m.f}\n`; });
+      log.forEach(m => { const d = new Date(m.time); const safeName = String(m.name == null ? "" : m.name).replace(/"/g, '""'); csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${safeName}",${m.cal},${m.p},${m.c},${m.f}\n`; });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `Alex_Diet_Export_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     });
 
@@ -1251,7 +1251,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
     document.getElementById('export-data-btn').addEventListener('click', () => { 
       const wLog = getLog(); const dLog = getDietLog();
       if (wLog.length === 0 && dLog.length === 0) return alert('No history to export.'); 
-      const backup = { version: 1, workout_log: wLog, diet_log: dLog, timestamp: new Date().toISOString() };
+      const backup = { version: 2, workout_log: wLog, diet_log: dLog, supplements_config: getSuppConfig(), supplements_log: getSuppLog(), saved_meals: getSavedMeals(), diet_targets: getTargets(), timestamp: new Date().toISOString() };
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' })); a.download = `Alex_Unified_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
     });
     document.getElementById('import-data-file').addEventListener('change', e => { 
@@ -1259,7 +1259,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
       reader.onload = event => { 
         try { 
           const parsed = JSON.parse(event.target.result); 
-          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
+          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); if (parsed.supplements_config) saveSuppConfig(parsed.supplements_config); if (parsed.supplements_log) saveSuppLog(parsed.supplements_log); if (parsed.saved_meals) setSavedMeals(parsed.saved_meals); if (parsed.diet_targets) localStorage.setItem('diet_targets', JSON.stringify(parsed.diet_targets)); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
           else if (Array.isArray(parsed)) { saveLog(parsed); renderHistory(); alert('Legacy workout data imported successfully!'); }
           else alert('Invalid file format.'); 
         } catch { alert('Failed to read file.'); } 
