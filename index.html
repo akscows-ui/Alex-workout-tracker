@@ -232,6 +232,7 @@
         <div><div class="flex justify-between text-xs font-bold"><span class="text-[var(--purple)]">Protein</span><span id="diet-p-text">0 / 0g</span></div><div class="diet-bar-bg"><div id="diet-p-bar" class="diet-bar-fill" style="width:0%; background:var(--purple)"></div></div></div>
         <div><div class="flex justify-between text-xs font-bold"><span class="text-[var(--gold)]">Carbs</span><span id="diet-c-text">0 / 0g</span></div><div class="diet-bar-bg"><div id="diet-c-bar" class="diet-bar-fill" style="width:0%; background:var(--gold)"></div></div></div>
         <div><div class="flex justify-between text-xs font-bold"><span class="text-[var(--danger)]">Fat</span><span id="diet-f-text">0 / 0g</span></div><div class="diet-bar-bg"><div id="diet-f-bar" class="diet-bar-fill" style="width:0%; background:var(--danger)"></div></div></div>
+        <div><div class="flex justify-between text-xs font-bold"><span class="text-[var(--teal)]">Fiber</span><span id="diet-fb-text">0 / 30g</span></div><div class="diet-bar-bg"><div id="diet-fb-bar" class="diet-bar-fill" style="width:0%; background:var(--teal)"></div></div></div>
       </div>
     </div>
 
@@ -259,6 +260,9 @@
       <div class="flex gap-3">
         <input type="number" id="diet-input-c" placeholder="Carbs (g)" class="w-1/2" />
         <input type="number" id="diet-input-f" placeholder="Fat (g)" class="w-1/2" />
+      </div>
+      <div class="flex gap-3">
+        <input type="number" id="diet-input-fb" placeholder="Fiber (g) — optional" class="w-full" />
       </div>
       <div class="flex gap-2 mt-2">
         <button id="diet-add-btn" class="btn-primary py-3 text-sm flex-1">Log Only</button>
@@ -330,6 +334,8 @@
         <h4 class="text-xs font-bold text-[#6b6b80] uppercase">Rest Days</h4>
         <div class="flex gap-2"><input type="number" id="edit-r-cal" placeholder="Cals" /><input type="number" id="edit-r-p" placeholder="Prot" /></div>
         <div class="flex gap-2"><input type="number" id="edit-r-c" placeholder="Carbs" /><input type="number" id="edit-r-f" placeholder="Fat" /></div>
+        <h4 class="text-xs font-bold text-[#6b6b80] uppercase mt-2">Daily Fiber Target</h4>
+        <div class="flex gap-2"><input type="number" id="edit-fiber" placeholder="Fiber (g)" /></div>
       </div>
       <div class="flex gap-3">
         <button id="targets-cancel-btn" class="flex-1 text-sm font-bold text-[#6b6b80] bg-[var(--elevated)] py-3 rounded-xl">Cancel</button>
@@ -492,7 +498,7 @@
     const REST_DAYS = ['tue','sat'];
     const COMPOUND_EXERCISES = ['Leg Press','Incline Machine Press','Plate-Loaded Shoulder Press','T-Bar Row Machine','Machine Pin-Loaded Row','Machine Chest Press'];
 
-    const DEFAULT_TARGETS = { training: { cal: 3100, p: 180, c: 440, f: 69 }, rest: { cal: 2800, p: 180, c: 365, f: 69 } };
+    const DEFAULT_TARGETS = { training: { cal: 3100, p: 180, c: 440, f: 69 }, rest: { cal: 2800, p: 180, c: 365, f: 69 }, fiber: 30 };
     function getTargets() { try { return JSON.parse(localStorage.getItem('diet_targets')) || DEFAULT_TARGETS; } catch { return DEFAULT_TARGETS; } }
 
     let currentView = 'home';
@@ -882,16 +888,16 @@
       document.getElementById('diet-cal-target').textContent = targets.cal.toLocaleString();
       
       const log = getDietLog(); const todayMeals = log.filter(m => m && m.time && dietDayKey(new Date(m.time)) === vKey);
-      let cCal = 0, cP = 0, cC = 0, cF = 0; todayMeals.forEach(m => { cCal+=floatVal(m.cal); cP+=floatVal(m.p); cC+=floatVal(m.c); cF+=floatVal(m.f); });
+      let cCal = 0, cP = 0, cC = 0, cF = 0, cFb = 0; todayMeals.forEach(m => { cCal+=floatVal(m.cal); cP+=floatVal(m.p); cC+=floatVal(m.c); cF+=floatVal(m.f); cFb+=floatVal(m.fb); });
       
       document.getElementById('diet-cal-current').textContent = cCal.toLocaleString();
       document.getElementById('diet-cal-remain').textContent = `${(targets.cal - cCal).toLocaleString()} left`;
       
       const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} / ${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
-      updateBar('p', cP, targets.p); updateBar('c', cC, targets.c); updateBar('f', cF, targets.f);
+      updateBar('p', cP, targets.p); updateBar('c', cC, targets.c); updateBar('f', cF, targets.f); const fiberTarget = targets.fiber || 30; updateBar('fb', cFb, fiberTarget);
 
       document.getElementById('diet-today-list').innerHTML = todayMeals.length === 0 ? `<p class="text-sm text-[#6b6b80] text-center py-4">No meals logged ${isViewingToday ? 'today' : 'on ' + vLabel}.</p>` : 
-        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name}</p><p class="text-[10px] text-[#6b6b80]">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div><div class="text-right"><p class="text-sm font-bold">${m.cal} kcal</p><p class="text-[10px] text-[#6b6b80]">${m.p}P · ${m.c}C · ${m.f}F</p></div><button class="text-[#ff4757] font-bold text-lg px-2 delete-meal-btn" data-id="${m.id}">×</button></div>`).join('');
+        todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name}</p><p class="text-[10px] text-[#6b6b80]">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div><div class="text-right"><p class="text-sm font-bold">${m.cal} kcal</p><p class="text-[10px] text-[#6b6b80]">${m.p}P · ${m.c}C · ${m.f}F · ${m.fb||0}g fiber</p></div><button class="text-[#ff4757] font-bold text-lg px-2 delete-meal-btn" data-id="${m.id}">×</button></div>`).join('');
           
       document.querySelectorAll('.delete-meal-btn').forEach(btn => btn.addEventListener('click', (e) => { deleteTargetId = e.currentTarget.dataset.id; deleteTargetType = 'diet'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
 
@@ -993,7 +999,7 @@
         <div class="autocomplete-item" data-id="${m.id}">
           <div class="flex-1" onclick="fillMeal('${m.id}')">
             <p class="text-sm font-bold text-white">${m.name}</p>
-            <p class="text-[10px] text-[#6b6b80]">${m.cal} kcal · ${m.p}P · ${m.c}C · ${m.f}F</p>
+            <p class="text-[10px] text-[#6b6b80]">${m.cal} kcal · ${m.p}P · ${m.c}C · ${m.f}F · ${m.fb||0}g fiber</p>
           </div>
           <button class="text-[#ff4757] font-bold px-2 py-1" onclick="deleteSavedMeal('${m.id}', event)">×</button>
         </div>
@@ -1009,6 +1015,7 @@
           document.getElementById('diet-input-p').value = m.p;
           document.getElementById('diet-input-c').value = m.c;
           document.getElementById('diet-input-f').value = m.f;
+          document.getElementById('diet-input-fb').value = m.fb || '';
           document.getElementById('autocomplete-list').style.display = 'none';
        }
     };
@@ -1047,8 +1054,9 @@ document.getElementById('diet-add-btn').addEventListener('click', () => {
   const p = Math.round(((parseFloat(document.getElementById('diet-input-p').value) || 0) * qty) * 10) / 10;
   const c = Math.round(((parseFloat(document.getElementById('diet-input-c').value) || 0) * qty) * 10) / 10; 
   const f = Math.round(((parseFloat(document.getElementById('diet-input-f').value) || 0) * qty) * 10) / 10;
+  const fb = Math.round(((parseFloat(document.getElementById('diet-input-fb').value) || 0) * qty) * 10) / 10;
   
-  if (cal === 0 && p === 0) return;
+  if (cal === 0 && p === 0 && fb === 0) return;
   
   // Append (x2), (x0.5), etc. to the name if it's not 1
   if (qty !== 1 && !name.includes('(x')) {
@@ -1056,7 +1064,7 @@ document.getElementById('diet-add-btn').addEventListener('click', () => {
   }
 
   const log = getDietLog(); 
-  log.push({ id: Date.now().toString(), time: dietEntryTime(), name, cal, p, c, f }); 
+  log.push({ id: Date.now().toString(), time: dietEntryTime(), name, cal, p, c, f, fb }); 
   saveDietLog(log);
 
   // Reset Form
@@ -1066,6 +1074,7 @@ document.getElementById('diet-add-btn').addEventListener('click', () => {
   document.getElementById('diet-input-p').value = ''; 
   document.getElementById('diet-input-c').value = ''; 
   document.getElementById('diet-input-f').value = ''; 
+  document.getElementById('diet-input-fb').value = ''; 
   renderDiet();
 });
 
@@ -1079,8 +1088,9 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
   const p = Math.round(((parseFloat(document.getElementById('diet-input-p').value) || 0) * qty) * 10) / 10;
   const c = Math.round(((parseFloat(document.getElementById('diet-input-c').value) || 0) * qty) * 10) / 10; 
   const f = Math.round(((parseFloat(document.getElementById('diet-input-f').value) || 0) * qty) * 10) / 10;
+  const fb = Math.round(((parseFloat(document.getElementById('diet-input-fb').value) || 0) * qty) * 10) / 10;
   
-  if (cal === 0 && p === 0) return;
+  if (cal === 0 && p === 0 && fb === 0) return;
   
   let finalName = rawName;
   if (qty !== 1 && !rawName.includes('(x')) {
@@ -1089,7 +1099,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
 
   // Push to today's log
   const log = getDietLog(); 
-  log.push({ id: Date.now().toString(), time: dietEntryTime(), name: finalName, cal, p, c, f }); 
+  log.push({ id: Date.now().toString(), time: dietEntryTime(), name: finalName, cal, p, c, f, fb }); 
   saveDietLog(log);
 
   // Save base 1x serving macros to your saved meals library
@@ -1097,7 +1107,8 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
   const baseP = Math.round((p / qty) * 10) / 10;
   const baseC = Math.round((c / qty) * 10) / 10;
   const baseF = Math.round((f / qty) * 10) / 10;
-  const baseMealData = { name: rawName, cal: baseCal, p: baseP, c: baseC, f: baseF };
+  const baseFb = Math.round((fb / qty) * 10) / 10;
+  const baseMealData = { name: rawName, cal: baseCal, p: baseP, c: baseC, f: baseF, fb: baseFb };
 
   let saved = getSavedMeals();
   const existingIdx = saved.findIndex(x => x && x.name && x.name.toLowerCase() === rawName.toLowerCase());
@@ -1112,14 +1123,15 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
   document.getElementById('diet-input-p').value = ''; 
   document.getElementById('diet-input-c').value = ''; 
   document.getElementById('diet-input-f').value = ''; 
+  document.getElementById('diet-input-fb').value = ''; 
   renderDiet();
 });
 
     document.getElementById('diet-export-btn').addEventListener('click', () => {
       const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
-      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g),Day Flag\n";
+      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g),Fiber (g),Day Flag\n";
       const csvFlags = getDayFlags();
-      log.forEach(m => { const d = new Date(m.time); const safeName = String(m.name == null ? "" : m.name).replace(/"/g, '""'); const dayFlag = ((csvFlags[dietDayKey(d)] || {}).status) || ''; csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${safeName}",${m.cal},${m.p},${m.c},${m.f},"${dayFlag}"\n`; });
+      log.forEach(m => { const d = new Date(m.time); const safeName = String(m.name == null ? "" : m.name).replace(/"/g, '""'); const dayFlag = ((csvFlags[dietDayKey(d)] || {}).status) || ''; csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${safeName}",${m.cal},${m.p},${m.c},${m.f},${m.fb||0},"${dayFlag}"\n`; });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `Alex_Diet_Export_${new Date().toISOString().split('T')[0]}.csv`; a.click();
     });
 
@@ -1143,13 +1155,15 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
       const t = getTargets();
       document.getElementById('edit-t-cal').value = t.training.cal; document.getElementById('edit-t-p').value = t.training.p; document.getElementById('edit-t-c').value = t.training.c; document.getElementById('edit-t-f').value = t.training.f;
       document.getElementById('edit-r-cal').value = t.rest.cal; document.getElementById('edit-r-p').value = t.rest.p; document.getElementById('edit-r-c').value = t.rest.c; document.getElementById('edit-r-f').value = t.rest.f;
+      document.getElementById('edit-fiber').value = t.fiber || 30;
       document.getElementById('targets-modal').style.display = 'flex';
     });
     document.getElementById('targets-cancel-btn').addEventListener('click', () => document.getElementById('targets-modal').style.display = 'none');
     document.getElementById('targets-save-btn').addEventListener('click', () => {
       const nt = {
         training: { cal: parseInt(document.getElementById('edit-t-cal').value, 10)||0, p: parseInt(document.getElementById('edit-t-p').value, 10)||0, c: parseInt(document.getElementById('edit-t-c').value, 10)||0, f: parseInt(document.getElementById('edit-t-f').value, 10)||0 },
-        rest: { cal: parseInt(document.getElementById('edit-r-cal').value, 10)||0, p: parseInt(document.getElementById('edit-r-p').value, 10)||0, c: parseInt(document.getElementById('edit-r-c').value, 10)||0, f: parseInt(document.getElementById('edit-r-f').value, 10)||0 }
+        rest: { cal: parseInt(document.getElementById('edit-r-cal').value, 10)||0, p: parseInt(document.getElementById('edit-r-p').value, 10)||0, c: parseInt(document.getElementById('edit-r-c').value, 10)||0, f: parseInt(document.getElementById('edit-r-f').value, 10)||0 },
+        fiber: parseInt(document.getElementById('edit-fiber').value, 10)||30
       };
       localStorage.setItem('diet_targets', JSON.stringify(nt)); document.getElementById('targets-modal').style.display = 'none'; renderDiet();
     });
