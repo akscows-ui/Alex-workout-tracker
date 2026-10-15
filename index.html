@@ -199,7 +199,6 @@
     <div class="flex items-center justify-between mb-1">
       <h1 class="text-2xl font-black gradient-text">Nutrition</h1>
       <div class="flex gap-2">
-        <button id="diet-travel-btn" class="text-xs font-bold text-[#6b6b80] bg-[var(--elevated)] px-3 py-1 rounded-md transition-colors">Travel Mode</button>
         <button id="diet-edit-targets-btn" class="text-xs font-bold text-[#6b6b80] bg-[var(--elevated)] px-3 py-1 rounded-md">Edit Targets</button>
       </div>
     </div>
@@ -499,7 +498,7 @@
     let currentView = 'home';
     let activeSession = null; 
     let timerInterval = null; let restTimerInterval = null; let lastRestTotal = 90; let restTimeLeft = 0;
-    let deleteTargetId = null; let deleteTargetType = null; let activeSwapEi = null; let travelModeActive = false;
+    let deleteTargetId = null; let deleteTargetType = null; let activeSwapEi = null;
     let historyVisibleCount = 10;
 
     function getLog() { try { const res = JSON.parse(localStorage.getItem('workout_log')); return Array.isArray(res) ? res : []; } catch { return []; } }
@@ -877,9 +876,9 @@
       const isViewingToday = dietViewOffset === 0;
       const isRest = REST_DAYS.includes(DAY_MAP[vStart.getDay()]);
       const allTargets = getTargets(); 
-      const targets = travelModeActive ? allTargets.rest : (isRest ? allTargets.rest : allTargets.training);
+      const targets = isRest ? allTargets.rest : allTargets.training;
       
-      document.getElementById('diet-status-text').textContent = (travelModeActive ? "Travel / Maintenance (3,200 kcal)" : (isRest ? "Rest Day Targets" : "Training Day Targets")) + (isViewingToday ? "" : " \u00b7 " + vLabel);
+      document.getElementById('diet-status-text').textContent = (isRest ? "Rest Day Targets" : "Training Day Targets") + (isViewingToday ? "" : " \u00b7 " + vLabel);
       document.getElementById('diet-cal-target').textContent = targets.cal.toLocaleString();
       
       const log = getDietLog(); const todayMeals = log.filter(m => m && m.time && dietDayKey(new Date(m.time)) === vKey);
@@ -1037,11 +1036,6 @@
       renderSuppEditList(); renderSupplements();
     });
 
-    document.getElementById('diet-travel-btn').addEventListener('click', (e) => {
-      travelModeActive = !travelModeActive;
-      e.currentTarget.style.color = travelModeActive ? '#fff' : '#6b6b80'; e.currentTarget.style.background = travelModeActive ? 'var(--teal)' : 'var(--elevated)';
-      renderDiet();
-    });
 
   // --- 1. LOG ONLY BUTTON ---
 document.getElementById('diet-add-btn').addEventListener('click', () => {
@@ -1049,10 +1043,10 @@ document.getElementById('diet-add-btn').addEventListener('click', () => {
   const qty = parseFloat(document.getElementById('diet-input-qty')?.value) || 1;
   
   // Multiply the inputs by the quantity
-  const cal = Math.round((parseInt(document.getElementById('diet-input-cal').value, 10) || 0) * qty); 
-  const p = Math.round((parseInt(document.getElementById('diet-input-p').value, 10) || 0) * qty);
-  const c = Math.round((parseInt(document.getElementById('diet-input-c').value, 10) || 0) * qty); 
-  const f = Math.round((parseInt(document.getElementById('diet-input-f').value, 10) || 0) * qty);
+  const cal = Math.round(((parseFloat(document.getElementById('diet-input-cal').value) || 0) * qty) * 10) / 10; 
+  const p = Math.round(((parseFloat(document.getElementById('diet-input-p').value) || 0) * qty) * 10) / 10;
+  const c = Math.round(((parseFloat(document.getElementById('diet-input-c').value) || 0) * qty) * 10) / 10; 
+  const f = Math.round(((parseFloat(document.getElementById('diet-input-f').value) || 0) * qty) * 10) / 10;
   
   if (cal === 0 && p === 0) return;
   
@@ -1081,10 +1075,10 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
   const qty = parseFloat(document.getElementById('diet-input-qty')?.value) || 1;
   
   // Multiply the inputs by the quantity for the active log
-  const cal = Math.round((parseInt(document.getElementById('diet-input-cal').value, 10) || 0) * qty); 
-  const p = Math.round((parseInt(document.getElementById('diet-input-p').value, 10) || 0) * qty);
-  const c = Math.round((parseInt(document.getElementById('diet-input-c').value, 10) || 0) * qty); 
-  const f = Math.round((parseInt(document.getElementById('diet-input-f').value, 10) || 0) * qty);
+  const cal = Math.round(((parseFloat(document.getElementById('diet-input-cal').value) || 0) * qty) * 10) / 10; 
+  const p = Math.round(((parseFloat(document.getElementById('diet-input-p').value) || 0) * qty) * 10) / 10;
+  const c = Math.round(((parseFloat(document.getElementById('diet-input-c').value) || 0) * qty) * 10) / 10; 
+  const f = Math.round(((parseFloat(document.getElementById('diet-input-f').value) || 0) * qty) * 10) / 10;
   
   if (cal === 0 && p === 0) return;
   
@@ -1099,10 +1093,10 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
   saveDietLog(log);
 
   // Save base 1x serving macros to your saved meals library
-  const baseCal = Math.round(cal / qty);
-  const baseP = Math.round(p / qty);
-  const baseC = Math.round(c / qty);
-  const baseF = Math.round(f / qty);
+  const baseCal = Math.round((cal / qty) * 10) / 10;
+  const baseP = Math.round((p / qty) * 10) / 10;
+  const baseC = Math.round((c / qty) * 10) / 10;
+  const baseF = Math.round((f / qty) * 10) / 10;
   const baseMealData = { name: rawName, cal: baseCal, p: baseP, c: baseC, f: baseF };
 
   let saved = getSavedMeals();
