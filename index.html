@@ -205,6 +205,20 @@
     </div>
     <p id="diet-status-text" class="text-sm text-[#6b6b80] mb-5 font-medium"></p>
 
+    <div class="card mb-6 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <button id="diet-prev-day" class="text-2xl font-black text-[#6b6b80] px-3 py-1">‹</button>
+        <p id="diet-viewed-label" class="text-sm font-bold">Today</p>
+        <button id="diet-next-day" class="text-2xl font-black text-[#6b6b80] px-3 py-1">›</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-bold text-[#6b6b80] uppercase tracking-widest shrink-0">Day</span>
+        <button id="diet-flag-over" class="text-xs font-bold px-3 py-1.5 rounded-md bg-[var(--elevated)] text-[#6b6b80]">🔥 Over</button>
+        <button id="diet-flag-under" class="text-xs font-bold px-3 py-1.5 rounded-md bg-[var(--elevated)] text-[#6b6b80]">📉 Under</button>
+        <input id="diet-flag-note" type="text" placeholder="Note (optional)" class="flex-1 text-xs min-w-0" />
+      </div>
+    </div>
+
     <div class="card mb-6">
       <div class="flex justify-between items-end mb-4">
         <div>
@@ -253,7 +267,7 @@
       </div>
     </div>
 
-    <h2 class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Today's Log</h2>
+    <h2 id="diet-log-heading" class="text-xs font-bold text-[#6b6b80] uppercase tracking-widest mb-3">Today's Log</h2>
     <div id="diet-today-list" class="space-y-2 mb-6"></div>
 
     <button id="diet-export-btn" class="btn-secondary w-full py-3 text-sm flex items-center justify-center gap-2"><span>📊</span> Export Diet Data (CSV)</button>
@@ -593,7 +607,7 @@
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
       
       if (name === 'home') renderHome();
-      if (name === 'diet') renderDiet();
+      if (name === 'diet') { dietViewOffset = 0; renderDiet(); }
       if (name === 'history') renderHistory();
       if (name === 'progress') renderProgress();
       if (name === 'log' && activeSession) { requestWakeLock(); startTimer(); renderLogView(); } else { releaseWakeLock(); }
@@ -834,15 +848,41 @@
     // ===========================
     // DIET & SUPPLEMENTS VIEW
     // ===========================
+    const DIET_DAY_CUTOFF_HOUR = 4;
+    function dietDayKey(d) {
+      const x = new Date(d.getTime()); x.setHours(x.getHours() - DIET_DAY_CUTOFF_HOUR);
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    }
+    function dietDayStart(key) {
+      const p = key.split('-').map(Number);
+      return new Date(p[0], p[1] - 1, p[2], DIET_DAY_CUTOFF_HOUR, 0, 0, 0);
+    }
+    function dietDayLabel(key) {
+      const p = key.split('-').map(Number);
+      return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    let dietViewOffset = 0;
+    function viewedDietKey() { const d = new Date(); d.setDate(d.getDate() + dietViewOffset); return dietDayKey(d); }
+    function dietEntryTime() {
+      if (dietViewOffset === 0) return new Date().toISOString();
+      return new Date(dietDayStart(viewedDietKey()).getTime() + 12 * 3600 * 1000).toISOString();
+    }
+    function getDayFlags() { try { return JSON.parse(localStorage.getItem('diet_day_flags')) || {}; } catch { return {}; } }
+    function saveDayFlags(f) { localStorage.setItem('diet_day_flags', JSON.stringify(f)); }
+
     function renderDiet() {
-      const isRest = REST_DAYS.includes(todayKey());
+      const vKey = viewedDietKey();
+      const vStart = dietDayStart(vKey);
+      const vLabel = dietDayLabel(vKey);
+      const isViewingToday = dietViewOffset === 0;
+      const isRest = REST_DAYS.includes(DAY_MAP[vStart.getDay()]);
       const allTargets = getTargets(); 
       const targets = travelModeActive ? allTargets.rest : (isRest ? allTargets.rest : allTargets.training);
       
-      document.getElementById('diet-status-text').textContent = travelModeActive ? "Travel / Maintenance (3,200 kcal)" : (isRest ? "Rest Day Targets" : "Training Day Targets");
+      document.getElementById('diet-status-text').textContent = (travelModeActive ? "Travel / Maintenance (3,200 kcal)" : (isRest ? "Rest Day Targets" : "Training Day Targets")) + (isViewingToday ? "" : " \u00b7 " + vLabel);
       document.getElementById('diet-cal-target').textContent = targets.cal.toLocaleString();
       
-      const log = getDietLog(); const todayStr = new Date().toDateString(); const todayMeals = log.filter(m => m && m.time && new Date(m.time).toDateString() === todayStr);
+      const log = getDietLog(); const todayMeals = log.filter(m => m && m.time && dietDayKey(new Date(m.time)) === vKey);
       let cCal = 0, cP = 0, cC = 0, cF = 0; todayMeals.forEach(m => { cCal+=floatVal(m.cal); cP+=floatVal(m.p); cC+=floatVal(m.c); cF+=floatVal(m.f); });
       
       document.getElementById('diet-cal-current').textContent = cCal.toLocaleString();
@@ -851,10 +891,25 @@
       const updateBar = (id, cur, tgt) => { document.getElementById(`diet-${id}-text`).textContent = `${Math.round(cur)} / ${tgt}g`; document.getElementById(`diet-${id}-bar`).style.width = `${Math.min((cur/tgt)*100, 100)}%`; };
       updateBar('p', cP, targets.p); updateBar('c', cC, targets.c); updateBar('f', cF, targets.f);
 
-      document.getElementById('diet-today-list').innerHTML = todayMeals.length === 0 ? `<p class="text-sm text-[#6b6b80] text-center py-4">No meals logged today.</p>` : 
+      document.getElementById('diet-today-list').innerHTML = todayMeals.length === 0 ? `<p class="text-sm text-[#6b6b80] text-center py-4">No meals logged ${isViewingToday ? 'today' : 'on ' + vLabel}.</p>` : 
         todayMeals.map(m => `<div class="card p-3 flex justify-between items-center bg-[var(--elevated)] border-[var(--border)]"><div><p class="text-sm font-bold">${m.name}</p><p class="text-[10px] text-[#6b6b80]">${new Date(m.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p></div><div class="text-right"><p class="text-sm font-bold">${m.cal} kcal</p><p class="text-[10px] text-[#6b6b80]">${m.p}P · ${m.c}C · ${m.f}F</p></div><button class="text-[#ff4757] font-bold text-lg px-2 delete-meal-btn" data-id="${m.id}">×</button></div>`).join('');
           
       document.querySelectorAll('.delete-meal-btn').forEach(btn => btn.addEventListener('click', (e) => { deleteTargetId = e.currentTarget.dataset.id; deleteTargetType = 'diet'; document.getElementById('delete-modal-y3z3').style.display = 'flex'; }));
+
+      const viewedLabel = document.getElementById('diet-viewed-label');
+      if (viewedLabel) {
+        viewedLabel.textContent = isViewingToday ? 'Today' : vLabel;
+        const nextBtn = document.getElementById('diet-next-day');
+        nextBtn.style.opacity = isViewingToday ? '0.25' : '1';
+        nextBtn.style.pointerEvents = isViewingToday ? 'none' : 'auto';
+        document.getElementById('diet-log-heading').textContent = isViewingToday ? "Today's Log" : 'Log \u00b7 ' + vLabel;
+        const dayFlags = getDayFlags(); const vf = dayFlags[vKey] || {};
+        const paintFlag = (id, active, fg, bg) => { const b = document.getElementById(id); b.style.background = active ? bg : ''; b.style.color = active ? fg : ''; b.style.border = active ? '1px solid ' + fg : ''; };
+        paintFlag('diet-flag-over', vf.status === 'over', '#ff4757', 'rgba(255,71,87,.16)');
+        paintFlag('diet-flag-under', vf.status === 'under', '#6c63ff', 'rgba(108,99,255,.16)');
+        const noteEl = document.getElementById('diet-flag-note');
+        if (document.activeElement !== noteEl) noteEl.value = vf.note || '';
+      }
 
       renderSupplements();
     }
@@ -1007,7 +1062,7 @@ document.getElementById('diet-add-btn').addEventListener('click', () => {
   }
 
   const log = getDietLog(); 
-  log.push({ id: Date.now().toString(), time: new Date().toISOString(), name, cal, p, c, f }); 
+  log.push({ id: Date.now().toString(), time: dietEntryTime(), name, cal, p, c, f }); 
   saveDietLog(log);
 
   // Reset Form
@@ -1040,7 +1095,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
 
   // Push to today's log
   const log = getDietLog(); 
-  log.push({ id: Date.now().toString(), time: new Date().toISOString(), name: finalName, cal, p, c, f }); 
+  log.push({ id: Date.now().toString(), time: dietEntryTime(), name: finalName, cal, p, c, f }); 
   saveDietLog(log);
 
   // Save base 1x serving macros to your saved meals library
@@ -1068,9 +1123,26 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
 
     document.getElementById('diet-export-btn').addEventListener('click', () => {
       const log = getDietLog(); if(log.length===0) return alert('No diet data to export.');
-      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g)\n";
-      log.forEach(m => { const d = new Date(m.time); const safeName = String(m.name == null ? "" : m.name).replace(/"/g, '""'); csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${safeName}",${m.cal},${m.p},${m.c},${m.f}\n`; });
+      let csv = "Date,Time,Food Name,Calories,Protein (g),Carbs (g),Fat (g),Day Flag\n";
+      const csvFlags = getDayFlags();
+      log.forEach(m => { const d = new Date(m.time); const safeName = String(m.name == null ? "" : m.name).replace(/"/g, '""'); const dayFlag = ((csvFlags[dietDayKey(d)] || {}).status) || ''; csv += `"${d.toLocaleDateString()}","${d.toLocaleTimeString()}","${safeName}",${m.cal},${m.p},${m.c},${m.f},"${dayFlag}"\n`; });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = `Alex_Diet_Export_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    });
+
+    document.getElementById('diet-prev-day').addEventListener('click', () => { dietViewOffset--; renderDiet(); });
+    document.getElementById('diet-next-day').addEventListener('click', () => { if (dietViewOffset < 0) { dietViewOffset++; renderDiet(); } });
+    const toggleDayFlag = (status) => {
+      const k = viewedDietKey(); const fs = getDayFlags(); const cur = fs[k] || {};
+      if (cur.status === status) { delete fs[k]; } else { fs[k] = { status: status, note: cur.note || '' }; }
+      saveDayFlags(fs); renderDiet();
+    };
+    document.getElementById('diet-flag-over').addEventListener('click', () => toggleDayFlag('over'));
+    document.getElementById('diet-flag-under').addEventListener('click', () => toggleDayFlag('under'));
+    document.getElementById('diet-flag-note').addEventListener('change', (e) => {
+      const k = viewedDietKey(); const fs = getDayFlags(); const note = e.target.value.trim();
+      if (!note && !(fs[k] && fs[k].status)) { delete fs[k]; }
+      else { fs[k] = Object.assign({}, fs[k], { note: note }); }
+      saveDayFlags(fs); renderDiet();
     });
 
     document.getElementById('diet-edit-targets-btn').addEventListener('click', () => {
@@ -1244,7 +1316,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
     document.getElementById('export-data-btn').addEventListener('click', () => { 
       const wLog = getLog(); const dLog = getDietLog();
       if (wLog.length === 0 && dLog.length === 0) return alert('No history to export.'); 
-      const backup = { version: 2, workout_log: wLog, diet_log: dLog, supplements_config: getSuppConfig(), supplements_log: getSuppLog(), saved_meals: getSavedMeals(), diet_targets: getTargets(), timestamp: new Date().toISOString() };
+      const backup = { version: 2, workout_log: wLog, diet_log: dLog, supplements_config: getSuppConfig(), supplements_log: getSuppLog(), saved_meals: getSavedMeals(), diet_targets: getTargets(), diet_day_flags: getDayFlags(), timestamp: new Date().toISOString() };
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' })); a.download = `Alex_Unified_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); 
     });
     document.getElementById('import-data-file').addEventListener('change', e => { 
@@ -1252,7 +1324,7 @@ document.getElementById('diet-save-add-btn').addEventListener('click', () => {
       reader.onload = event => { 
         try { 
           const parsed = JSON.parse(event.target.result); 
-          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); if (parsed.supplements_config) saveSuppConfig(parsed.supplements_config); if (parsed.supplements_log) saveSuppLog(parsed.supplements_log); if (parsed.saved_meals) setSavedMeals(parsed.saved_meals); if (parsed.diet_targets) localStorage.setItem('diet_targets', JSON.stringify(parsed.diet_targets)); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
+          if (parsed.version && parsed.workout_log) { saveLog(parsed.workout_log); saveDietLog(parsed.diet_log || []); if (parsed.supplements_config) saveSuppConfig(parsed.supplements_config); if (parsed.supplements_log) saveSuppLog(parsed.supplements_log); if (parsed.saved_meals) setSavedMeals(parsed.saved_meals); if (parsed.diet_targets) localStorage.setItem('diet_targets', JSON.stringify(parsed.diet_targets)); if (parsed.diet_day_flags) localStorage.setItem('diet_day_flags', JSON.stringify(parsed.diet_day_flags)); renderHistory(); renderDiet(); alert('Unified data imported successfully!'); }
           else if (Array.isArray(parsed)) { saveLog(parsed); renderHistory(); alert('Legacy workout data imported successfully!'); }
           else alert('Invalid file format.'); 
         } catch { alert('Failed to read file.'); } 
